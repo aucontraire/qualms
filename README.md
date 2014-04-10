@@ -1,5 +1,5 @@
 # qualms
-Google App Engine extension of `Qualtrics <http://www.qualtrics.com/>`_ email jobs for longitudinal research studies
+Google App Engine extension of [Qualtrics](http://www.qualtrics.com/) email jobs for longitudinal research studies
 
 #### Your Qualtrics authentication info
 
@@ -27,6 +27,6 @@ fu31_email_sent = db.DateTimeProperty() # this adds date the 31st follow-up was 
 ```
 
 #### Example surveys
-#. QUALMS-Baseline.qsf::
-#. QUALMS-Follow-up.qsf::
+1. QUALMS-Baseline.qsf
+2. QUALMS-Follow-up.qsf
 
