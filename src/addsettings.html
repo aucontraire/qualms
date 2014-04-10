@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+	<head>
+		<title>Qualtrics Email | Settings</title>
+		<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+		<link rel="shortcut icon" href="/static/images/favicon.ico" />
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	</head>
+	<body>
+		{% if admin == 1 %}
+			<a href="{{ url_access }}">{{ url_access_text }}</a> |
+			<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
+			<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
+			<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+		{% endif %}
+		<a href="{{ url }}">{{ url_linktext }}</a><br>
+		<h1>Qualtrics Email</h1>
+		<h2>Admin UI - Add email settings</h2>
+			<table cellpadding="5">
+			
+			{% if settings.count() > 1 %}
+				<tr>
+			      <td colspan="5" class="errors">You have more than one group of settings.</td>			    
+			    </tr>
+			    <tr>
+			    <td colspan="5" class="errors">To avoid any errors or unexpected behavior, use only one.</td>			  
+			    </tr>
+			{% endif %}
+			
+			
+			{% if settings.count() > 0 %}
+			    <tr>
+			    	  <th>Survey name</th>
+			      <th>Survey ID</th>
+			      <th>From email</th>
+			      <th>From name</th>
+			      <th>Email subject</th>
+			    <tr>
+			    {% for setting in settings %}
+			      
+			    <tr>
+			    	  <td><a href="/editsettings?id={{ setting.from_email }}"> {{ setting.survey_name }}</a></td>
+			      <td>{{ setting.survey_id }}</td>
+			      <td> {{ setting.from_email }} </td>
+			      <td> {{ setting.from_name }} </td>
+			      <td> {{ setting.subject_txt }} </td>
+			    </tr>
+			    {% endfor %}
+			    {% else %}
+			    <tr>
+			      <td colspan="5">No settings information exists</td>
+			    </tr>
+			    {% endif %}
+			    
+			  </table>
+		
+		<br>
+		<hr>
+		<form action="/addsettings" method="post">
+			  <table>
+			    <tbody>
+			    		<tr>   
+				        <td><strong>Survey name</strong>:</td>
+				        <td><input type="text" size="50" name="survey_name"  placeholder="IT-Contest-survey" /></td>
+				      </tr>
+				      <tr>   
+				        <td><strong>Survey id</strong>:</td>
+				        <td><input type="text" size="50" name="survey_id"  placeholder="SV_xxxxxxxxxxxxxxx" /></td>
+				      </tr>
+				      <tr>
+				        <td><strong>From email</strong>:</td>
+				        <td><input type="text" size="50" name="from_email" placeholder="youremail@email.com" /></td>
+				      </tr>
+				      <tr>
+				        <td><strong>From name</strong>:</td>
+				        <td><input type="text" size="50" name="from_name" placeholder="UCSF Research team" /></td>
+				      </tr>
+				      <tr>
+				        <td><strong>Email subject</strong>:</td>
+				        <td><input type="text" size="50" name="subject_txt" placeholder="Follow-up" /></td>
+				      </tr>
+			    </tbody>
+			  </table>
+			<br />
+			  <div>
+			    <input type="submit" value="Add">
+			  </div>
+		</form>
+
+	</body>
+</html>

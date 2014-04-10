@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+	<head>
+		<title>Qualtrics Email | Access</title>
+		<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+		<link rel="shortcut icon" href="/static/images/favicon.ico" />
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	</head>
+	<body>
+		{% if admin == 1 %}
+			<a href="{{ url_access }}">{{ url_access_text }}</a> |
+			<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
+			<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
+			<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+		{% endif %}
+		<a href="{{ url }}">{{ url_linktext }}</a><br>
+		<h1>Qualtrics Email</h1>
+		<h2>Admin UI - Add Qualtrics credentials</h2>
+		<br>
+		
+		<table cellpadding="5">
+		{% if qualtrics_access.count() > 1 %}
+				<tr>
+			      <td colspan="4" class="errors">You have more than one set of Qualtrics access user credentials.</td>			    
+			    </tr>
+			    <tr>
+			    <td colspan="4" class="errors">To avoid any errors or unexpected behavior, use only one.</td>			  
+			    </tr>
+			{% endif %}
+			    
+			     {% if qualtrics_access.count() > 0 %}			     	
+				  <tr>
+			    	  <th>Username</th>
+			      <th>API Token</th>
+			      <th>Library ID</th>
+			      <th>Panel ID</th>			     
+			    <tr>
+			    {% for access in qualtrics_access %}
+			    <tr>
+			    	  <td><a href="/editqualaccess?id={{ access.key().name() }}"> {{ access.user_name }}</a></td> 		    
+			      <td> {{ access.api_token }} </td>
+			      <td> {{ access.library_id }} </td>
+			      <td> {{ access.panel_id }} </td>
+			    </tr>
+			    	   
+			    		{% endfor %}
+			    
+			    {% else %}
+			    <tr>
+			      <td colspan="4">No Qualtrics access information exists</td>			  
+			    </tr>
+			    	{% endif %}
+			  </table>		
+		<br>
+		<hr>
+		<form action="/addqualaccess" method="post">
+  			<table>
+    				<tbody>
+				      <tr>
+				        		<td> Username:</td>
+				        		<td><input type="text"  size="50" name="user_name"  placeholder="sf#123456"></td>
+				      </tr>
+				      <tr>
+					        <td> API Token:</td>
+					        <td><input type="text" size="50" name="api_token" value="" placeholder="QyDWw7yRSlquEehsPSnLjGPDc3GPwlgpAM8bd1VI"></td>
+				      </tr>
+				      <tr>
+					        <td> Library ID:</td>
+					        <td><input type="text" size="50" name="library_id" placeholder="GR_xxxxxxxxxxxxxxx"></td>
+				      </tr>
+				      <tr>
+					        <td> Panel ID:</td>
+					        <td><input type="text" size="50" name="panel_id" placeholder="ML_xxxxxxxxxxxxxxx"></td>
+				      </tr>
+    				</tbody>
+  			</table>
+  			<br />
+			  <div>
+			    <input type="submit" value="Add">
+			  </div>
+		</form>
+
+		<br>
+		<br>
+	</body>
+</html>

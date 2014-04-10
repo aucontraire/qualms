@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+	<head>
+		<title>Qualtrics Email | Edit settings</title>
+		<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+		<link rel="shortcut icon" href="/static/images/favicon.ico" />
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	</head>
+	<body>
+		{% if admin == 1 %}
+				<a href="{{ url_access }}">{{ url_access_text }}</a> |
+				<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
+				<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
+				<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+		{% endif %}
+		<a href="{{ url }}">{{ url_linktext }}</a><br>
+		<h1>Qualtrics Email</h1>
+		<h2>Admin UI - Edit settings</h2>
+		<form action="/deletesettings" method="POST">
+			<input type="hidden" value="{{ from_email }}" name="id">
+			<table>
+				<tr>
+					<td>&nbsp;</td>
+					<td><input type="submit" value="Delete"/></td>
+				</tr>
+			</table>
+		</form>
+		<form action="/editsettings" method="POST">
+			<input type="hidden" value="{{ from_email }}" name="id">
+			<table>
+				<tr>
+					<td><strong>Date created</strong>:</td><td>{{ date_created }}</td>
+				</tr>
+				<tr>
+					<td><strong>Last modified</strong>:</td><td>{{ last_modified }}</td>
+				</tr>
+				<tr>
+					<td><strong>Last modified by</strong>:</td><td>{{ last_modified_by }}</td>
+				</tr>
+				<tr>
+					<td><strong>From email</strong>:</td><td>{{ from_email }}</td>
+				</tr>
+				<tr>
+					<td><strong>Survey name</strong>:</td><td><input type="text" name="survey_name" size="50" value="{{ survey_name }}"/></td>
+				</tr>
+				<tr>
+					<td><strong>Survey id</strong>:</td><td><input type="text" name="survey_id" size="50" value="{{ survey_id }}"/></td>
+				</tr>
+				
+				<tr>
+					<td><strong>From name</strong>:</td><td><input type="text" name="from_name" size="50" value="{{ from_name }}"/></td>
+				</tr>
+				<tr>
+					<td><strong>Email subject</strong>:</td><td><input type="text" name="subject_txt" size="50" value="{{ subject_txt }}"/></td>
+				</tr>
+				<tr>
+					<td><input type="submit" value="Save edit"/></td><td>&nbsp;</td>					
+				</tr>
+			</table>
+		</form>
+	</body>
+</html>
+
+

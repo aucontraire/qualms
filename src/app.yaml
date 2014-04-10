@@ -1,0 +1,102 @@
+application: qualms
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+
+- url: /cron/getpanelworker
+  script: main.app
+  login: admin
+
+- url: /cron/sendfu
+  script: main.app
+  login: admin
+
+- url: /cron/missedfu
+  script: main.app
+  login: admin
+
+- url: /cron/updatefu
+  script: main.app
+  login: admin
+ 
+- url: /cron/getunsub
+  script: main.app
+  login: admin
+
+
+- url: /static/css
+  static_dir: static/css
+- url: /static/images
+  static_dir: static/images
+
+- url: /.*
+  script: main.app
+  login: required
+
+- url: /addqualaccess
+  script: main.app
+  login: admin
+- url: /editqualaccess
+  script: main.app
+  login: admin
+- url: /deletequalaccess
+  script: main.app
+  login: admin
+
+- url: /addschedule
+  script: main.app
+  login: admin
+- url: /editschedule
+  script: main.app
+  login: admin
+- url: /deleteschedule
+  script: main.app
+  login: admin
+  
+- url: /addsettings
+  script: main.app
+  login: admin
+- url: /editsettings
+  script: main.app
+  login: admin    
+- url: /deletesettings
+  script: main.app
+  login: admin   
+  
+- url: /addmessageids
+  script: main.app
+  login: admin  
+- url: /editmessageids
+  script: main.app
+  login: admin    
+- url: /deletemessageids
+  script: main.app
+  login: admin    
+
+- url: /fucheckup
+  script: main.app
+  login: admin
+ 
+libraries:
+- name: jinja2
+  version: "2.6"
+- name: PIL
+  version: "1.1.7"
+- name: lxml
+  version: "2.3"
+- name: webapp2
+  version: "2.5.2"
+- name: webob
+  version: "1.1.1"
+- name: numpy
+  version: "1.6.1"
+- name: setuptools
+  version: "0.6c11"
+
+builtins:
+- deferred: on
+- appstats: on
+- admin_redirect: on

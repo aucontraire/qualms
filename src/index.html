@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+	<head>
+		<title>Qualtrics Email | Home</title>
+		<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+		<link rel="shortcut icon" href="/static/images/favicon.ico" />
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	</head>
+	<body>
+		{% if admin == 1 %}
+			<a href="{{ url_access }}">{{ url_access_text }}</a> |
+			<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
+			<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
+			<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+		{% endif %}
+		<a href="{{ url }}">{{ url_linktext }}</a><br>
+		<h1>Qualtrics Email</h1>
+		<h2>Admin UI</h2>
+		<br>
+		{% if admin !=1 %}
+			<div class="errors">You currently do not have administrative access. In order to access all the options, you will need to request more privileges.</div>
+		{% endif %}
+	</body>
+</html>

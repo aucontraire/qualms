@@ -1,0 +1,20 @@
+cron:
+- description: get panel worker
+  url: /cron/getpanelworker
+  schedule: every 6 hours
+  
+- description: updates fuperiod based on today's date
+  url: /cron/updatefu
+  schedule: every day 20:15
+
+- description: sends follow-up emails
+  url: /cron/sendfu
+  schedule: every day 20:30
+  
+- description: sends missed follow-up emails
+  url: /cron/missedfu
+  schedule: every 12 hours
+  
+- description: checks for unsubscribed participants  
+  url: /cron/getunsub
+  schedule: every day 15:30
