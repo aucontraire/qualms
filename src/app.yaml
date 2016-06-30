@@ -76,6 +76,11 @@ handlers:
   script: main.app
   login: admin    
 
+- url: /sendemail
+  script: main.app
+  login: admin
+  auth_fail_action: unauthorized
+
 - url: /fucheckup
   script: main.app
   login: admin
