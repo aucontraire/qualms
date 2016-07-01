@@ -1,85 +1,114 @@
-<!DOCTYPE html>
-	<head>
-		<title>Qualtrics Email | Access</title>
-		<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
-		<link rel="shortcut icon" href="/static/images/favicon.ico" />
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-	</head>
-	<body>
-		{% if admin == 1 %}
-			<a href="{{ url_access }}">{{ url_access_text }}</a> |
-			<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
-			<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
-			<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+{% extends "base.html" %}
+{% block title %}Credentials{% endblock title %}
+{% block head %}{% endblock head %}
+{% block nav %}
+	{% if admin == 1 %}
+		<li class="active"><a href="{{ url_access }}" title="{{ url_access_text }}">{{ url_access_text }}</a></li>
+		<li><a href="{{ url_schedule }}" title="{{ url_schedule_text }}">{{ url_schedule_text }}</a></li>					
+		<li><a href="{{ url_settings }}" title="{{ url_settings_text }}">{{ url_settings_text }}</a></li>
+		<li><a href="{{ url_followups }}" title="{{ url_followups_text }}">{{ url_followups_text }}</a></li>
+		<li><a href="{{ url_sendemail }}" title="{{ url_sendemail_text }}">{{ url_sendemail_text }}</a></li>
+		{% if download == 1 %}
+			<li><a href="{{ url_download }}" title="{{ url_download_text }}">{{ url_download_text }}</a></li>
 		{% endif %}
-		<a href="{{ url }}">{{ url_linktext }}</a><br>
-		<h1>Qualtrics Email</h1>
-		<h2>Admin UI - Add Qualtrics credentials</h2>
-		<br>
-		
-		<table cellpadding="5">
-		{% if qualtrics_access.count() > 1 %}
-				<tr>
-			      <td colspan="4" class="errors">You have more than one set of Qualtrics access user credentials.</td>			    
-			    </tr>
-			    <tr>
-			    <td colspan="4" class="errors">To avoid any errors or unexpected behavior, use only one.</td>			  
-			    </tr>
-			{% endif %}
-			    
-			     {% if qualtrics_access.count() > 0 %}			     	
-				  <tr>
-			    	  <th>Username</th>
-			      <th>API Token</th>
-			      <th>Library ID</th>
-			      <th>Panel ID</th>			     
-			    <tr>
-			    {% for access in qualtrics_access %}
-			    <tr>
-			    	  <td><a href="/editqualaccess?id={{ access.key().name() }}"> {{ access.user_name }}</a></td> 		    
-			      <td> {{ access.api_token }} </td>
-			      <td> {{ access.library_id }} </td>
-			      <td> {{ access.panel_id }} </td>
-			    </tr>
-			    	   
-			    		{% endfor %}
-			    
-			    {% else %}
-			    <tr>
-			      <td colspan="4">No Qualtrics access information exists</td>			  
-			    </tr>
-			    	{% endif %}
-			  </table>		
-		<br>
-		<hr>
-		<form action="/addqualaccess" method="post">
-  			<table>
-    				<tbody>
-				      <tr>
-				        		<td> Username:</td>
-				        		<td><input type="text"  size="50" name="user_name"  placeholder="sf#123456"></td>
-				      </tr>
-				      <tr>
-					        <td> API Token:</td>
-					        <td><input type="text" size="50" name="api_token" value="" placeholder="QyDWw7yRSlquEehsPSnLjGPDc3GPwlgpAM8bd1VI"></td>
-				      </tr>
-				      <tr>
-					        <td> Library ID:</td>
-					        <td><input type="text" size="50" name="library_id" placeholder="GR_xxxxxxxxxxxxxxx"></td>
-				      </tr>
-				      <tr>
-					        <td> Panel ID:</td>
-					        <td><input type="text" size="50" name="panel_id" placeholder="ML_xxxxxxxxxxxxxxx"></td>
-				      </tr>
-    				</tbody>
-  			</table>
-  			<br />
-			  <div>
-			    <input type="submit" value="Add">
-			  </div>
-		</form>
-
-		<br>
-		<br>
-	</body>
-</html>
+		<li><a href="{{ urla }}" title="{{ url_admin }}" target="_blank">{{ url_admin }}</a></li>
+	{% endif %}
+	<li><a href="{{ url }}" title="{{ url_linktext }}">{{ url_linktext }}</a></li>
+{% endblock nav %}
+{% block container %}
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">
+			{% block pageheaders %}	
+				<h1 class="page-header">Admin</h1>
+				<h3 class="sub-header">Qualtrics credentials</h3>
+			{% endblock pageheaders %}
+			{% block alerts %}
+				{% if qualtrics_access.count() > 1 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>You have more than one set of Qualtrics access user credentials.</strong> To avoid any errors or unexpected behavior, use only one.
+					</div>
+				{% elif qualtrics_access.count() < 1 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>No Qualtrics access information exists.</strong>
+					</div>
+				{% endif %}
+			{% endblock alerts %}			
+			{% if qualtrics_access.count() > 0 %}
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Username</th>
+							<th>API Token</th>
+							<th>Library ID</th>
+							<th>Panel ID</th>			     
+						<tr>
+					</thead>
+					<tbody>
+						{% for access in qualtrics_access %}
+							<tr>
+								<td><a href="/editqualaccess?id={{ access.key().name() }}"> {{ access.user_name }}</a></td> 		    
+								<td> {{ access.api_token }} </td>
+								<td> {{ access.library_id }} </td>
+								<td> {{ access.panel_id }} </td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			{% endif %}	
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">
+   			<div class="panel panel-success">
+	   			<div class="panel-heading">Add credentials</div>
+	   			<div class="panel-body">
+					<form class="form-horizontal" action="/addqualaccess" method="post">
+						<div class="form-group">
+							<label for="id_user_name" class="col-sm-2 control-label">
+								Username: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Qualtrics username that corresponds to Qualtrics API Token"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_user_name" name="user_name">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_api_token" class="col-sm-2 control-label">
+								API Token: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_api_token" name="api_token">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_library_id" class="col-sm-2 control-label">
+								Library ID: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_library_id" name="library_id">
+							</div>
+						</div>		
+						<div class="form-group">
+							<label for="id_panel_id" class="col-sm-2 control-label">
+								Panel ID: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_panel_id" name="panel_id">
+							</div>
+						</div>										
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="submit" class="btn btn-success">Add</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>	
+		</div>
+	</div>	
+{% endblock container %}

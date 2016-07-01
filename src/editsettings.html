@@ -1,63 +1,102 @@
-<!DOCTYPE html>
-	<head>
-		<title>Qualtrics Email | Edit settings</title>
-		<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
-		<link rel="shortcut icon" href="/static/images/favicon.ico" />
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-	</head>
-	<body>
-		{% if admin == 1 %}
-				<a href="{{ url_access }}">{{ url_access_text }}</a> |
-				<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
-				<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
-				<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+{% extends "base.html" %}
+{% block title %}Edit settings{% endblock title %}
+{% block head %}
+	<script>
+		$(document).ready(function() {
+			$("#delete").submit(function(event) {
+				if (confirm("Are you sure you want to delete this information?")) {
+					return true;
+				}
+				event.preventDefault();
+			});			
+		});
+	</script>
+{% endblock head %}
+{% block nav %}
+	{% if admin == 1 %}
+		<li><a href="{{ url_access }}" title="{{ url_access_text }}">{{ url_access_text }}</a></li>
+		<li><a href="{{ url_schedule }}" title="{{ url_schedule_text }}">{{ url_schedule_text }}</a></li>					
+		<li class="active"><a href="{{ url_settings }}" title="{{ url_settings_text }}">{{ url_settings_text }}</a></li>
+		<li><a href="{{ url_followups }}" title="{{ url_followups_text }}">{{ url_followups_text }}</a></li>
+		<li><a href="{{ url_sendemail }}" title="{{ url_sendemail_text }}">{{ url_sendemail_text }}</a></li>
+		{% if download == 1 %}
+			<li><a href="{{ url_download }}" title="{{ url_download_text }}">{{ url_download_text }}</a></li>
 		{% endif %}
-		<a href="{{ url }}">{{ url_linktext }}</a><br>
-		<h1>Qualtrics Email</h1>
-		<h2>Admin UI - Edit settings</h2>
-		<form action="/deletesettings" method="POST">
-			<input type="hidden" value="{{ from_email }}" name="id">
-			<table>
-				<tr>
-					<td>&nbsp;</td>
-					<td><input type="submit" value="Delete"/></td>
-				</tr>
-			</table>
-		</form>
-		<form action="/editsettings" method="POST">
-			<input type="hidden" value="{{ from_email }}" name="id">
-			<table>
-				<tr>
-					<td><strong>Date created</strong>:</td><td>{{ date_created }}</td>
-				</tr>
-				<tr>
-					<td><strong>Last modified</strong>:</td><td>{{ last_modified }}</td>
-				</tr>
-				<tr>
-					<td><strong>Last modified by</strong>:</td><td>{{ last_modified_by }}</td>
-				</tr>
-				<tr>
-					<td><strong>From email</strong>:</td><td>{{ from_email }}</td>
-				</tr>
-				<tr>
-					<td><strong>Survey name</strong>:</td><td><input type="text" name="survey_name" size="50" value="{{ survey_name }}"/></td>
-				</tr>
-				<tr>
-					<td><strong>Survey id</strong>:</td><td><input type="text" name="survey_id" size="50" value="{{ survey_id }}"/></td>
-				</tr>
-				
-				<tr>
-					<td><strong>From name</strong>:</td><td><input type="text" name="from_name" size="50" value="{{ from_name }}"/></td>
-				</tr>
-				<tr>
-					<td><strong>Email subject</strong>:</td><td><input type="text" name="subject_txt" size="50" value="{{ subject_txt }}"/></td>
-				</tr>
-				<tr>
-					<td><input type="submit" value="Save edit"/></td><td>&nbsp;</td>					
-				</tr>
-			</table>
-		</form>
-	</body>
-</html>
+		<li><a href="{{ urla }}" title="{{ url_admin }}" target="_blank">{{ url_admin }}</a></li>
+	{% endif %}
+	<li><a href="{{ url }}" title="{{ url_linktext }}">{{ url_linktext }}</a></li>
+{% endblock nav %}
+{% block container %}
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">
+			{% block pageheaders %}		
+				<h1 class="page-header">Admin</h1>
+				<h3 class="sub-header">Edit settings</h3>
+			{% endblock pageheaders %}
+			<form action="/deletesettings" method="POST" id="delete">
+				<input type="hidden" value="{{ from_email }}" name="id">
+				<input type="submit" class="btn btn-danger" value="Delete"/>
+			</form>					
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">	
+   			<div class="panel panel-success">
+	   			<div class="panel-heading">Edit settings</div>
+	   			<div class="panel-body">
+	   				<ul class="list-group">
+						<li class="list-group-item disabled">Date created: {{ date_created }}</li>
+						<li class="list-group-item disabled">Last modified: {{ last_modified }}</li>
+						<li class="list-group-item disabled">Last modified by: {{ last_modified_by }}</li>
+						<li class="list-group-item disabled">From email: {{ from_email }}</li>
+					</ul>
+					<form class="form-horizontal" action="/editsettings" method="POST">
+						<input type="hidden" value="{{ from_email }}" name="id">
 
-
+						<div class="form-group">
+							<label for="id_survey_name" class="col-sm-2 control-label">
+								Survey name: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Name of the follow-up survey to be sent out"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_survey_name" name="survey_name" value="{{ survey_name }}">
+							</div>
+						</div>	
+						<div class="form-group">
+							<label for="id_survey_id" class="col-sm-2 control-label">
+								Survey ID: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_survey_id" name="survey_id" value="{{ survey_id }}">
+							</div>
+						</div>	
+						<div class="form-group">
+							<label for="id_from_name" class="col-sm-2 control-label">
+								From name: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Name that will be displayed in the sender field"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_from_name" name="from_name" value="{{ from_name }}"å>
+							</div>
+						</div>	
+						<div class="form-group">
+							<label for="id_subject_txt" class="col-sm-2 control-label">
+								Email subject: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Subject that will be displayed in the email"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_subject_txt" name="subject_txt" value="{{ subject_txt }}"å>
+							</div>
+						</div>																									
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="submit" class="btn btn-success">Save edit</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>							
+		</div>
+	</div>
+{% endblock container %}	

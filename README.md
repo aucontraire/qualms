@@ -1,5 +1,5 @@
 # qualms
-Google App Engine extension of [Qualtrics](http://www.qualtrics.com/) email jobs for longitudinal research studies
+Google App Engine extension of [Qualtrics](http://www.qualtrics.com/) email jobs for longitudinal research studies with rolling enrollment
 
 #### Your Qualtrics authentication info
 

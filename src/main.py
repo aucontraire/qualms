@@ -22,29 +22,55 @@ jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
 
-tformats = '%Y-%m-%d'  # pattern that matches formatting fordate only
-tformatl = '%Y-%m-%d %H:%M:%S'  # pattern that matches formatting for datetime  (formatted: 2013-01-01 23:00:00)
+def get_templ_vals():
+    ''' URLs to pages '''
+    template_values = {       
+        'url_linktext': 'Logout',
+        
+        'urla': '/',
+        'url_admin': '',
+    
+        'url_access' : '/addqualaccess',
+        'url_access_text' : 'Access',
+        
+        'url_schedule' : '/addschedule',
+        'url_schedule_text' : 'Schedule',
+        
+        'url_settings' : '/addsettings',
+        'url_settings_text' : 'Settings',
+        
+        'url_followups' : '/addmessageids',
+        'url_followups_text' : 'Follow-ups',
+        
+        'url_sendemail' : '/sendemail',
+        'url_sendemail_text' : 'Send email',
+        
+        'url_download' : '/fucheckup',
+        'url_download_text' : 'Download',
+    }
+    
+    return template_values
 
+
+tformats = '%Y-%m-%d'  # pattern that matches formatting fordate only (formatted: 2013-01-01)
+tformatl = '%Y-%m-%d %H:%M:%S'  # pattern that matches formatting for datetime  (formatted: 2013-01-01 23:00:00)
+tformatalt = '%m/%d/%Y %I:%M %p' # (10/29/2015 12:00 AM) 
 
 def timeStamp(now):
-    """ Formats datetime string as tformatl = '%Y-%m-%d %H:%M:%S' (2013-02-08 16:39:00)  """
+    """ Formats current datetime to '%Y-%m-%d %H:%M:%S' (2013-02-08 16:39:00)  """
     # date
-    d = now.date()
-    year = d.year
-    month = d.month
-    day = d.day
+    d = now.date() # extracts the date from the current datetime
+    year = d.year # gets the year
+    month = d.month # gets the month
+    day = d.day # gets the day of the month
     
     # time
-    t = now.time()
+    t = now.time() # extracts the time from the current datetime
     hour = t.hour
     minute = t.minute
     second = t.second
     today_datetime = datetime.datetime(year, month, day, hour, minute, second)
     return today_datetime
-
-
-data = {}
-
 
 def qualtricsCall(data):
     """ Standard parameters common to all Qualtrics REST API calls """
@@ -59,7 +85,7 @@ def qualtricsCall(data):
     access_data['PanelID'] = q[0].panel_id
 
     data['Format'] = 'XML'
-    data['Version'] = '2.0'
+    data['Version'] = '2.5'
     
     return access_data
 
@@ -68,7 +94,7 @@ class qualtricsAccessInfo(db.Model):
     """ Models a list of user-related info to access Qualtrics API """
     created_by = db.UserProperty(auto_current_user_add=True)
     date_created = db.DateTimeProperty(auto_now_add=True)
-    last_modified_by = db.UserProperty(auto_current_user=True)
+    last_modified_by = db.UserProperty(auto_current_user=True) # Google account which made changes
     last_modified = db.DateTimeProperty(auto_now=True)
     
     user_name = db.StringProperty() # User
@@ -78,6 +104,7 @@ class qualtricsAccessInfo(db.Model):
 
 
 def qualtricsAccessInfoByKeyName(user_name):
+    user_name = re.sub(r'(#+)', r'', user_name) # removes the problematic # to use in the query
     return qualtricsAccessInfo.get_by_key_name(user_name)
 
 
@@ -85,7 +112,7 @@ class emailSchedule(db.Model):
     """  Models a list of settings related to project timeline and other parameters """
     created_by = db.UserProperty(auto_current_user_add=True)
     date_created = db.DateTimeProperty(auto_now_add=True)
-    last_modified_by = db.UserProperty(auto_current_user=True)
+    last_modified_by = db.UserProperty(auto_current_user=True) # Google account which made changes
     last_modified = db.DateTimeProperty(auto_now=True)
     
     time_zone = db.StringProperty() # Time zone of study
@@ -105,8 +132,6 @@ def is_study_active():
     time_zone = schedule_query[0].time_zone
     start_date = schedule_query[0].start_date
     stop_date = schedule_query[0].stop_date
-    
-    now = datetime.datetime.now()
     
     if time_zone == 'Eastern':
         zone = datetime.datetime.now(tz=ustimezone.Eastern) # get current Eastern datetime
@@ -131,7 +156,7 @@ class emailSettings(db.Model):
     """  Models a list of emails settings for follow-up emails """
     created_by = db.UserProperty(auto_current_user_add=True)
     date_created = db.DateTimeProperty(auto_now_add=True)
-    last_modified_by = db.UserProperty(auto_current_user=True)
+    last_modified_by = db.UserProperty(auto_current_user=True) # Google account which made changes
     last_modified = db.DateTimeProperty(auto_now=True)
     
     survey_name = db.StringProperty() # NEW (delete? It may not make sense given the custom settings in the message ids table/form)
@@ -161,7 +186,7 @@ class messageIDs(db.Model):
     """ Models a list of follow-ups including message ids and follow-up periods. """
     created_by = db.UserProperty(auto_current_user_add=True)
     date_created = db.DateTimeProperty(auto_now_add=True)
-    last_modified_by = db.UserProperty(auto_current_user=True)
+    last_modified_by = db.UserProperty(auto_current_user=True) # Google account which made changes
     last_modified = db.DateTimeProperty(auto_now=True)
     
     fu_period = db.IntegerProperty()
@@ -192,19 +217,14 @@ class emailJobs(db.Model):
     """ Models a list of email jobs for each participant """
     date_created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True) # NEW
-    
-    trigger_id = db.StringProperty()  # TriggerResponseID
     recipient_id = db.StringProperty() # RecipientID
-    
-    test_data = db.StringProperty() # Identifies test data (TESTDATA=1)
-    unsubscribed = db.IntegerProperty() # Subscription status
-    
+    trigger_id = db.StringProperty()  # TriggerResponseID
+    test_data = db.IntegerProperty(default=0) # Identifies test data (TESTDATA=1) TODO: Decide whether to change to Boolean
+    unsubscribed = db.IntegerProperty() # Subscription status TODO: Decide whether to change to Boolean
+    unsubscribe_date = db.DateTimeProperty() # NEW
     start_date_local = db.DateTimeProperty() # STARTDATE datetime (timestamp) in participant's local time zone
     consent_date = db.DateTimeProperty() # CONSENTDATE datetime (timestamp) in UTC
-    unsubscribe_date = db.DateTimeProperty() # NEW
-    
     fu_period = db.IntegerProperty() #Follow-up period 
-    
     fu1 = db.DateTimeProperty() # Follow-up 1 datetime
     fu2 = db.DateTimeProperty()
     fu3 = db.DateTimeProperty()
@@ -237,7 +257,7 @@ class emailJobs(db.Model):
     fu30 = db.DateTimeProperty()
     
     last_fu_sent = db.DateTimeProperty() # Datetime last follow-up email was sent
-        
+    
     fu1_email_sent = db.DateTimeProperty()  # Datetime that follow-up 1 was sent
     fu2_email_sent = db.DateTimeProperty()
     fu3_email_sent = db.DateTimeProperty()
@@ -273,23 +293,23 @@ class emailJobs(db.Model):
     comments = db.StringProperty(multiline=True) #Comments
     
     @classmethod
-    def addto_datastore(cls, trigger_id, access_data, follow_up_number, fu_dict, interval):
+    def addto_datastore(cls, recipient_id, access_data, follow_up_number, fu_dict, interval):
         """ Class method that adds participant records (entities) to emailJobs table """
         
-        email_jobs = cls.get_by_key_name(trigger_id)
+        email_jobs = cls.get_by_key_name(recipient_id)
         if email_jobs is None:
-            email_jobs = cls(key_name=trigger_id)
+            email_jobs = cls(key_name=recipient_id)  
                 
-        email_jobs.trigger_id = trigger_id
+        email_jobs.recipient_id = recipient_id
         
-        getPanelParse(trigger_id, access_data, follow_up_number, fu_dict, interval, email_jobs)
+        getPanelParse(recipient_id, access_data, follow_up_number, fu_dict, interval, email_jobs)
         
         email_jobs.put()
         
     @classmethod
-    def update_unsub(cls, triggerid):
+    def update_unsub(cls, recipient_id):
         """ Class method that updates unsubscribed participants """
-        email_jobs = cls.get_by_key_name(triggerid)
+        email_jobs = cls.get_by_key_name(recipient_id)
         email_jobs.unsubscribed = 1
         now = datetime.datetime.now()
         email_jobs.unsubscribe_date = timeStamp(now)
@@ -297,18 +317,18 @@ class emailJobs(db.Model):
         email_jobs.put()
         
     @classmethod
-    def update_fu(cls, trigger_id, fup):
+    def update_fu(cls, recipient_id, fup):
         """ Class method that updates follow-up period """
-        email_jobs = cls.get_by_key_name(trigger_id)
+        email_jobs = cls.get_by_key_name(recipient_id)
         email_jobs.fu_period = fup
         
         email_jobs.put()
     
     @classmethod
-    def update_fusent(cls, trigger_id, follow_up, send_date_utc):
+    def update_fusent(cls, recipient_id, follow_up, send_date_utc):
         """ Class method that updates fux_email_sent in emailJobs table """
         
-        email_jobs = cls.get_by_key_name(trigger_id)
+        email_jobs = cls.get_by_key_name(recipient_id)
         
         i = str(follow_up)
         follow_up_sent = 'fu' + i + '_email_sent'
@@ -319,8 +339,8 @@ class emailJobs(db.Model):
         email_jobs.put()
         
 
-def emailJobsByKeyName(trigger_id):
-    return emailJobs.get_by_key_name(trigger_id)
+def emailJobsByKeyName(recipient_id):  
+    return emailJobs.get_by_key_name(recipient_id)
 
     
 class lastRecipientID(db.Model):
@@ -342,71 +362,35 @@ class fusSent(db.Model):
 def fusSentByKeyName(fu_date):
     return fusSent.get_by_key_name(fu_date)
 
+def ejs_exist():
+    ejs = emailJobs.all()
+    if ejs.count() == 0:
+        return 0
+    else:
+        return 1  
+
 
 class MainPage(webapp2.RequestHandler):
     """GAE - Qualtrics main admin page """
+    
     def get(self):
-        template_values = {}
-        
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
-                
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                   'admin' : admin,
-                                   'url': url,
-                    
-                                   'url_linktext': url_linktext,
-                                   'url_admin': url_admin,
-                                   'urla': urla,
-                    
-                                    'url_access' : url_access,
-                                    'url_access_text' : url_access_text,
-                                    'url_schedule' : url_schedule,
-                                    'url_schedule_text' : url_schedule_text,
-                                    'url_settings' : url_settings,
-                                    'url_settings_text' : url_settings_text,
-                                    'url_followups' : url_followups,
-                                    'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['download'] = ejs_exist()
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
-
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
+            
         template = jinja_environment.get_template('index.html')
         self.response.out.write(template.render(template_values))
 
@@ -415,97 +399,47 @@ class addQualtricsAccessInfo(webapp2.RequestHandler):
     """ Adds Qualtrics user-related info to qualtricsAccessInfo table via an html form """
     
     def get(self):
-        qualtrics_access = qualtricsAccessInfo.all()
-        
-        template_values = {}
-        
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
-                
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                   'qualtrics_access' : qualtrics_access,
-                                   
-                                   'admin' : admin,
-                                   'url': url,
-                    
-                                   'url_linktext': url_linktext,
-                                   'url_admin': url_admin,
-                                   'urla': urla,
-                    
-                                    'url_access' : url_access,
-                                    'url_access_text' : url_access_text,
-                                    'url_schedule' : url_schedule,
-                                    'url_schedule_text' : url_schedule_text,
-                                    'url_settings' : url_settings,
-                                    'url_settings_text' : url_settings_text,
-                                    'url_followups' : url_followups,
-                                    'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['download'] = ejs_exist()  
+                qualtrics_access = qualtricsAccessInfo.all()
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
+                template_values['qualtrics_access'] = qualtrics_access
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
 
         template = jinja_environment.get_template('addqualaccess.html')
         self.response.out.write(template.render(template_values))
 
-    def post(self):
-        qualtrics_access = qualtricsAccessInfo.all()
-        
+    def post(self):     
+        template_values = get_templ_vals()
+        template_values['download'] = ejs_exist()
         url = users.create_logout_url(self.request.uri)
-        url_linktext = 'Logout'
-        template_values = {
-            'url': url,
-            'url_linktext': url_linktext,
-            'qualtrics_access' : qualtrics_access
-        }
+        template_values['url'] = url
+        template_values['admin'] = 1
+        template_values['urla'] = '_ah/admin/'
+        template_values['url_admin'] = 'GAE'
+        qualtrics_access = qualtricsAccessInfo.all()
+        template_values['qualtrics_access'] = qualtrics_access
         
         user_name = self.request.get('user_name')
-        
         new_user = re.sub(r'(#+)', r'', user_name)
-        
-        qualtrics_access = qualtricsAccessInfo(key_name=new_user)
-        
-        qualtrics_access.user_name = user_name
-        qualtrics_access.api_token = self.request.get('api_token') 
-        qualtrics_access.library_id = self.request.get('library_id')
-        qualtrics_access.panel_id = self.request.get('panel_id')
-        
-        qualtrics_access.put()
+        qualtrics_cred = qualtricsAccessInfo(key_name=new_user)
+        qualtrics_cred.user_name = user_name
+        qualtrics_cred.api_token = self.request.get('api_token') 
+        qualtrics_cred.library_id = self.request.get('library_id')
+        qualtrics_cred.panel_id = self.request.get('panel_id')
+        qualtrics_cred.put()
         
         template = jinja_environment.get_template('addqualaccess.html')
         self.response.out.write(template.render(template_values))
@@ -514,103 +448,54 @@ class addQualtricsAccessInfo(webapp2.RequestHandler):
 class editQualtricsAccessInfo(webapp2.RequestHandler):
     """  Edits Qualtrics user-related info in qualtricsAccessInfo table via an html form """
     def get(self):
-        
         user_name = self.request.get('id')
         newpost = qualtricsAccessInfoByKeyName(user_name)
         
         date_created = newpost.date_created
         last_modified = newpost.last_modified 
         last_modified_by = newpost.last_modified_by
-        
         panel_id = newpost.panel_id
         library_id = newpost.library_id 
         api_token = newpost.api_token
-        
         user_key = newpost.key().name()
         user_name = newpost.user_name
         
-        template_values = {}
-        
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
-                
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {             
-                                    'user_name' : user_name,
-                                    'user_key' : user_key,
-                                    'panel_id' : panel_id,
-                                    'library_id' : library_id,
-                                    'last_modified_by' : last_modified_by,
-                                    'date_created' : date_created,
-                                    'last_modified' : last_modified,
-                                    'api_token' : api_token,
-                                    
-                                    'admin' : admin,
-                                    'url': url,
-                                    
-                                    'url_linktext': url_linktext,
-                                    'url_admin': url_admin,
-                                    'urla': urla,
-                                    
-                                    'url_access' : url_access,
-                                    'url_access_text' : url_access_text,
-                                    'url_schedule' : url_schedule,
-                                    'url_schedule_text' : url_schedule_text,
-                                    'url_settings' : url_settings,
-                                    'url_settings_text' : url_settings_text,
-                                    'url_followups' : url_followups,
-                                    'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
+                template_values['download'] = ejs_exist()    
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
+                template_values['user_name'] = user_name
+                template_values['user_key'] = user_key
+                template_values['panel_id'] = panel_id
+                template_values['library_id'] = library_id
+                template_values['last_modified_by'] = last_modified_by
+                template_values['date_created'] = date_created.strftime('%m/%d/%Y %I:%M %p')
+                template_values['last_modified'] = last_modified.strftime('%m/%d/%Y %I:%M %p')
+                template_values['api_token'] = api_token
                  
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
         
         template = jinja_environment.get_template('editqualaccess.html')
         self.response.out.write(template.render(template_values))
         
     def post(self):
-        
         user_name = self.request.get('id')
         panel_id = self.request.get('panel_id')
         library_id = self.request.get('library_id')
         api_token = self.request.get('api_token')
         
         newpost = qualtricsAccessInfoByKeyName(user_name)
-        
         newpost.panel_id = panel_id
         newpost.library_id = library_id
         newpost.api_token = api_token
@@ -630,96 +515,48 @@ class deleteQualtricsAccessInfo(webapp2.RequestHandler):
 
 class addEmailSchedule(webapp2.RequestHandler):
     """ Adds project parameters and timeline info to emailSchedule table via an html form """
-    def get(self):
-               
+    def get(self):       
         schedule_query = emailSchedule.all()
         schedule_query.order('date_created')
-                        
-        template_values = {}
         
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
-                
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                   'schedule_query': schedule_query,
-                                   
-                                   'admin' : admin,
-                                   'url': url,
-                    
-                                   'url_linktext': url_linktext,
-                                   'url_admin': url_admin,
-                                   'urla': urla,
-                    
-                                    'url_access' : url_access,
-                                    'url_access_text' : url_access_text,
-                                    'url_schedule' : url_schedule,
-                                    'url_schedule_text' : url_schedule_text,
-                                    'url_settings' : url_settings,
-                                    'url_settings_text' : url_settings_text,
-                                    'url_followups' : url_followups,
-                                    'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['download'] = ejs_exist()    
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
+                template_values['schedule_query'] = schedule_query
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
 
         template = jinja_environment.get_template('addschedule.html')
         self.response.out.write(template.render(template_values))
         
     def post(self):
+        template_values = get_templ_vals()
+        url = users.create_logout_url(self.request.uri)
+        template_values['url'] = url
+        template_values['admin'] = 1
+        template_values['urla'] = '_ah/admin/'
+        template_values['url_admin'] = 'GAE'
         
         schedule_query = emailSchedule.all()
         schedule_query.order('date_created')
-        
-        url = users.create_logout_url(self.request.uri)
-        url_linktext = 'Logout'
-        
-        template_values = {
-            'url': url,
-            'url_linktext': url_linktext,
-            'schedule_query' : schedule_query
-        }
+        template_values['schedule_query'] = schedule_query
         
         email_schedule = emailSchedule()
         
         email_schedule.time_zone = str(self.request.get('time_zone'))
-        email_schedule.start_date = datetime.datetime.strptime(self.request.get('start_date'), tformatl)
-        email_schedule.stop_date = datetime.datetime.strptime(self.request.get('stop_date'), tformatl)
+        email_schedule.start_date = datetime.datetime.strptime(self.request.get('start_date'), tformatalt)
+        email_schedule.stop_date = datetime.datetime.strptime(self.request.get('stop_date'), tformatalt)
         email_schedule.follow_up_num = int(self.request.get('follow_up_num'))
                 
         interval = self.request.get('interval')
@@ -737,7 +574,6 @@ class addEmailSchedule(webapp2.RequestHandler):
 class editEmailSchedule(webapp2.RequestHandler):
     """  Edits project parameters and timeline info in emailSchedule table via an html form  """
     def get(self):
-        
         key_id = int(self.request.get('id'))
         newpost = emailScheduleById(key_id)
         
@@ -749,77 +585,33 @@ class editEmailSchedule(webapp2.RequestHandler):
         stop_date = newpost.stop_date
         follow_up_num = newpost.follow_up_num
         interval = newpost.interval
-               
-        template_values = {}
         
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
+                template_values['download'] = ejs_exist()                  
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
                 
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                        'key_id' : key_id,
-                                        'date_created' : date_created,
-                                        'last_modified' : last_modified,
-                                        'last_modified_by' : last_modified_by,
-                                        'time_zone' : time_zone,
-                                        'start_date' : start_date,
-                                        'stop_date' : stop_date,
-                                        'follow_up_num' : follow_up_num,
-                                        'interval' : interval,
-                                        
-                                        'admin' : admin,
-                                        'url': url,
-                                        
-                                        'url_linktext': url_linktext,
-                                        'url_admin': url_admin,
-                                        'urla': urla,
-                                        
-                                        'url_access' : url_access,
-                                        'url_access_text' : url_access_text,
-                                        'url_schedule' : url_schedule,
-                                        'url_schedule_text' : url_schedule_text,
-                                        'url_settings' : url_settings,
-                                        'url_settings_text' : url_settings_text,
-                                        'url_followups' : url_followups,
-                                        'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['key_id'] = key_id
+                template_values['date_created'] = date_created.strftime('%m/%d/%Y %I:%M %p')
+                template_values['last_modified'] = last_modified.strftime('%m/%d/%Y %I:%M %p')
+                template_values['last_modified_by'] = last_modified_by
+                template_values['time_zone'] = time_zone
+                template_values['start_date'] = start_date.strftime('%m/%d/%Y %I:%M %p')
+                template_values['stop_date'] = stop_date.strftime('%m/%d/%Y %I:%M %p')
+                template_values['follow_up_num'] = follow_up_num
+                template_values['interval'] = interval
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
                
         template = jinja_environment.get_template('editschedule.html')
         self.response.out.write(template.render(template_values))
@@ -828,8 +620,8 @@ class editEmailSchedule(webapp2.RequestHandler):
         
         key_id = int(self.request.get('id'))      
         time_zone = self.request.get('time_zone')
-        start_date = datetime.datetime.strptime(self.request.get('start_date'), tformatl)
-        stop_date = datetime.datetime.strptime(self.request.get('stop_date'), tformatl)
+        start_date = datetime.datetime.strptime(self.request.get('start_date'), tformatalt)
+        stop_date = datetime.datetime.strptime(self.request.get('stop_date'), tformatalt)
         follow_up_num = int(self.request.get('follow_up_num'))
         interval = self.request.get('interval')
         
@@ -862,93 +654,45 @@ class deleteEmailSchedule(webapp2.RequestHandler):
 class addEmailSettings(webapp2.RequestHandler):
     """ Adds email settings info to emailSettings table via an html form """
     def get(self):
-        
         email_settings = emailSettings.all()
-                                
-        template_values = {}
         
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
-                
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                   'settings': email_settings,
-                                   
-                                   'admin' : admin,
-                                   'url': url,
-                    
-                                   'url_linktext': url_linktext,
-                                   'url_admin': url_admin,
-                                   'urla': urla,
-                    
-                                    'url_access' : url_access,
-                                    'url_access_text' : url_access_text,
-                                    'url_schedule' : url_schedule,
-                                    'url_schedule_text' : url_schedule_text,
-                                    'url_settings' : url_settings,
-                                    'url_settings_text' : url_settings_text,
-                                    'url_followups' : url_followups,
-                                    'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['download'] = ejs_exist()                     
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
+                template_values['settings'] = email_settings                  
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
         
         template = jinja_environment.get_template('addsettings.html')
         self.response.out.write(template.render(template_values))
         
     def post(self):
+        template_values = get_templ_vals()
+        url = users.create_logout_url(self.request.uri)
+        template_values['url'] = url
+        template_values['admin'] = 1
+        template_values['urla'] = '_ah/admin/'
+        template_values['url_admin'] = 'GAE'
         
         settings_query = emailSettings.all()
-        
-        url = users.create_logout_url(self.request.uri)
-        url_linktext = 'Logout'
-        template_values = {
-            'url': url,
-            'url_linktext': url_linktext,
-            'settings': settings_query
-        }
+        template_values['settings'] = settings_query
         
         from_email = str(self.request.get('from_email'))
         email_settings = emailSettings(key_name=from_email)
         
         email_settings.from_email = from_email
         email_settings.survey_name = str(self.request.get('survey_name'))
-        
         
         # Takes into account blank fields and sets them to None
         surveyid = self.request.get('survey_id')        
@@ -981,83 +725,37 @@ class editEmailSettings(webapp2.RequestHandler):
         date_created = newpost.date_created
         last_modified = newpost.last_modified 
         last_modified_by = newpost.last_modified_by
-        
         survey_name = newpost.survey_name
         survey_id = newpost.survey_id 
         from_name = newpost.from_name
         subject_txt = newpost.subject_txt
-        
         from_email = newpost.key().name()
                
-        template_values = {}
-        
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
+                template_values['download'] = ejs_exist()                  
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
                 
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                        'from_email' : from_email,
-                                        'date_created' : date_created,
-                                        'last_modified' : last_modified,
-                                        'last_modified_by' : last_modified_by,
-                                        'survey_name' : survey_name,
-                                        'survey_id' : survey_id,
-                                        'from_name' : from_name,
-                                        'subject_txt' : subject_txt,
-                                        
-                                        'admin' : admin,
-                                        'url': url,
-                                        
-                                        'url_linktext': url_linktext,
-                                        'url_admin': url_admin,
-                                        'urla': urla,
-                                        
-                                        'url_access' : url_access,
-                                        'url_access_text' : url_access_text,
-                                        'url_schedule' : url_schedule,
-                                        'url_schedule_text' : url_schedule_text,
-                                        'url_settings' : url_settings,
-                                        'url_settings_text' : url_settings_text,
-                                        'url_followups' : url_followups,
-                                        'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['from_email'] = from_email
+                template_values['date_created'] = date_created.strftime('%m/%d/%Y %I:%M %p')
+                template_values['last_modified'] = last_modified.strftime('%m/%d/%Y %I:%M %p')
+                template_values['last_modified_by'] = last_modified_by
+                template_values['survey_name'] = survey_name
+                template_values['survey_id'] = survey_id
+                template_values['from_name'] = from_name
+                template_values['subject_txt'] = subject_txt           
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
         
         template = jinja_environment.get_template('editsettings.html')
         self.response.out.write(template.render(template_values))
@@ -1103,7 +801,6 @@ class deleteEmailSettings(webapp2.RequestHandler):
 class addMessageIDs(webapp2.RequestHandler):
     """ Adds follow-up info to messageIDs table via an html form """
     def get(self):
-        
         # pipes values from settings into form if they exist
         settings_query = emailSettings.all()
         if settings_query.count() == 1:
@@ -1119,7 +816,12 @@ class addMessageIDs(webapp2.RequestHandler):
         # validation of follow-up messages number
         message_count = messages.count()
         schedule_query = emailSchedule.all()
-        follow_up_number = schedule_query[0].follow_up_num
+        
+        try:
+            follow_up_number = schedule_query[0].follow_up_num
+        except:
+            follow_up_number = 0
+            
         follow_up_val = 0
         if follow_up_number < message_count:
             follow_up_val = 1
@@ -1127,82 +829,40 @@ class addMessageIDs(webapp2.RequestHandler):
             follow_up_val = 0
         
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
+                template_values['download'] = ejs_exist()                  
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
                 
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                   'messages': messages,
-                                    'subject_txt' : subject_txt,
-                                    'survey_id' : survey_id,
-                                    'follow_up_val' : follow_up_val,
-                                   
-                                   'admin' : admin,
-                                   'url': url,
-                    
-                                   'url_linktext': url_linktext,
-                                   'url_admin': url_admin,
-                                   'urla': urla,
-                    
-                                    'url_access' : url_access,
-                                    'url_access_text' : url_access_text,
-                                    'url_schedule' : url_schedule,
-                                    'url_schedule_text' : url_schedule_text,
-                                    'url_settings' : url_settings,
-                                    'url_settings_text' : url_settings_text,
-                                    'url_followups' : url_followups,
-                                    'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['messages'] = messages
+                template_values['subject_txt'] = subject_txt
+                template_values['survey_id'] = survey_id 
+                template_values['follow_up_val'] = follow_up_val 
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
 
         template = jinja_environment.get_template('addmessageids.html')
         self.response.out.write(template.render(template_values))
         
     def post(self):
+        template_values = get_templ_vals()
+        url = users.create_logout_url(self.request.uri)
+        template_values['url'] = url
+        template_values['admin'] = 1
+        template_values['urla'] = '_ah/admin/'
+        template_values['url_admin'] = 'GAE'
         
         messages = messageIDs.all()
-        url = users.create_logout_url(self.request.uri)
-        url_linktext = 'Logout'
-        template_values = {
-            'url': url,
-            'url_linktext': url_linktext,
-            'messages' : messages
-        }
+        template_values['messages'] = messages
         
         message_id = str(self.request.get('message_id'))
         message_ids = messageIDs(key_name=message_id)
@@ -1259,76 +919,32 @@ class editMessageIDs(webapp2.RequestHandler):
         days_since = newpost.days_since
         fu_period = newpost.fu_period
         message_id = newpost.key().name()
-                
-        template_values = {}
         
         if users.get_current_user():
+            template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            urla = '/'
-            url_admin = ""
-            
-            admin = 0
+            template_values['url'] = url
+            template_values['admin'] = 0
             
             if users.is_current_user_admin():
-                admin = 1
-                url = users.create_logout_url(self.request.uri)
-                url_linktext = 'Logout'
+                template_values['download'] = ejs_exist()                   
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
                 
-                urla = "_ah/admin/"
-                url_admin = 'Go to admin pages'
-                
-                url_access = '/addqualaccess'
-                url_access_text = 'Access'
-                url_schedule = '/addschedule'
-                url_schedule_text = 'Schedule'
-                url_settings = '/addsettings'
-                url_settings_text = 'Settings'
-                url_followups = '/addmessageids'
-                url_followups_text = 'Follow-ups'
-                
-                template_values = {
-                                        'message_id' : message_id,
-                                        'subject_txt' : subject_txt,
-                                        'date_created' : date_created,
-                                        'last_modified' : last_modified,
-                                        'last_modified_by' : last_modified_by,
-                                        'survey_id' : survey_id,
-                                        'days_since' : days_since,
-                                        'fu_period' : fu_period,
-                                        
-                                        'admin' : admin,
-                                        'url': url,
-                                        
-                                        'url_linktext': url_linktext,
-                                        'url_admin': url_admin,
-                                        'urla': urla,
-                                        
-                                        'url_access' : url_access,
-                                        'url_access_text' : url_access_text,
-                                        'url_schedule' : url_schedule,
-                                        'url_schedule_text' : url_schedule_text,
-                                        'url_settings' : url_settings,
-                                        'url_settings_text' : url_settings_text,
-                                        'url_followups' : url_followups,
-                                        'url_followups_text' : url_followups_text,
-                                    }
-            else:
-                url_linktext = 'Logout'
-                
-                template_values = {
-                                   'url': url,
-                                   'url_linktext': url_linktext,
-                                   }
-                 
+                template_values['message_id'] = message_id 
+                template_values['subject_txt'] = subject_txt
+                template_values['date_created'] = date_created.strftime('%m/%d/%Y %I:%M %p')
+                template_values['last_modified'] = last_modified.strftime('%m/%d/%Y %I:%M %p')
+                template_values['last_modified_by'] = last_modified_by
+                template_values['survey_id'] = survey_id
+                template_values['days_since'] = days_since
+                template_values['fu_period'] = fu_period      
         else:
+            template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-            template_values = {
-                               'url': url,
-                               'url_linktext': url_linktext,
-                               }
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
        
         template = jinja_environment.get_template('editmessageids.html')
         self.response.out.write(template.render(template_values))
@@ -1359,12 +975,16 @@ class deleteMessageIDs(webapp2.RequestHandler):
         self.redirect('/addmessageids')
 
 
-def getPanelParse(trigger_id, access_data, follow_up_number, fu_dict, interval, email_jobs):
+def getPanelParse(recipient_id, access_data, follow_up_number, fu_dict, interval, email_jobs):
     """ Adds new participant data from the Qualtrics panel to the emailJobs table """
+    
+    data = {}
     
     data['Request'] = 'getPanel'
     data['User'] = str(access_data['User'])
     data['Token'] = str(access_data['Token'])
+    data['Version'] = '2.5'
+    data['Format'] = 'XML'
     data['LibraryID'] = str(access_data['LibraryID'])
     data['PanelID'] = str(access_data['PanelID']) 
     data['RecipientHistory'] = '0'
@@ -1374,32 +994,29 @@ def getPanelParse(trigger_id, access_data, follow_up_number, fu_dict, interval, 
     url_values = urllib.urlencode(data)
     full_url = url + '?' + url_values
     
-    req = urllib2.Request(full_url)
-    
     try:
-        urllib2.urlopen(req)
-
         thedata = urllib2.urlopen(full_url) #for parsing XML
         
         tree = objectify.parse(thedata)  #for parsing XML
-    
         root = tree.getroot()
+        
         Recipients = len(root.Recipient)
         people = root.Recipient
            
         for i in range(0, Recipients):
             recipient = people[i]
             ED = recipient.EmbeddedData
+            recipientid = recipient.RecipientID.text
             triggerid = ED.TriggerResponseID.text
                 
-            if trigger_id == triggerid: #compares TriggerResponseID in Panel to taskqueue list
-                recipient_id = recipient.RecipientID.text
+            if recipient_id == recipientid: #compares TriggerResponseID in Panel to taskqueue list
                 unsubscribed = recipient.Unsubscribed.text
                 start_date_local = ED.STARTDATE.text
                 consent = ED.CONSENTDATE.text
-                test_data = ED.TESTDATA.text
+                test_data = int(ED.TESTDATA.text)
                 
                 email_jobs.recipient_id = recipient_id 
+                email_jobs.trigger_id = triggerid
                 email_jobs.test_data = test_data
                 email_jobs.unsubscribed = int(unsubscribed)
                 
@@ -1426,7 +1043,7 @@ def getPanelParse(trigger_id, access_data, follow_up_number, fu_dict, interval, 
     except urllib2.HTTPError as e:
         print e.code
         print e.read()
-        
+    
 
 class storePanel(webapp2.RequestHandler):
     """ Task queue that queries Qualtrics panel for new participants """
@@ -1438,7 +1055,7 @@ class storePanel(webapp2.RequestHandler):
     def get(self):
         
         if is_study_active() == 1:
-            
+            data = {}
             access_data = qualtricsCall(data)
             
             # get number of follow-ups to put a limit to fu_period
@@ -1477,11 +1094,8 @@ class storePanel(webapp2.RequestHandler):
             url = 'https://new.qualtrics.com/WRAPI/ControlPanel/api.php'
             url_values = urllib.urlencode(data)
             full_url = url + '?' + url_values
-            
-            req = urllib2.Request(full_url)
-            
+
             try:
-                urllib2.urlopen(req)
                 thedata = urllib2.urlopen(full_url) #for parsing XML
                                     
                 tree = objectify.parse(thedata)  #for parsing XML
@@ -1496,17 +1110,15 @@ class storePanel(webapp2.RequestHandler):
             
                     for i in range(0, Recipients):
                         recipient = people[i]
-                        ED = recipient.EmbeddedData
-                        triggerid = ED.TriggerResponseID.text
+                        recipientid = recipient.RecipientID.text
                                   
                         # Updates lastRecipientID table with the last RecipientID to be used for the next REST API call
                         if i == Recipients - 1: # Sees if the recipient is the last one on the list and if so:
                             downloaded = i + 1
-                            recipientid = recipient.RecipientID.text
                             lastrecipient = lastRecipientID(key_name=recipientid, last_recipientid=recipientid, number_downloaded=downloaded)
                             lastrecipient.put()
                 
-                        q.add(taskqueue.Task(payload=triggerid, method='PULL'))
+                        q.add(taskqueue.Task(payload=recipientid, method='PULL'))
                                         
                     while True:
                         tasks = q.lease_tasks(300, 100)
@@ -1532,9 +1144,9 @@ class storePanel(webapp2.RequestHandler):
             pass
 
 
-def update_unsub(trigger_id):
+def update_unsub(recipient_id):
     """ Updates  in Datastore """
-    db.run_in_transaction(emailJobs.update_unsub, trigger_id)
+    db.run_in_transaction(emailJobs.update_unsub, recipient_id)
 
 
 class getUnsub(webapp2.RequestHandler):
@@ -1544,20 +1156,20 @@ class getUnsub(webapp2.RequestHandler):
         """ Checks for unsubscribed participants in Qualtrics panel and compares to GAE Datastore"""
         
         if is_study_active() == 1:
-            
             gae_list = [] #List of unsubscribed participants from GAE Datastore
             
             email_job_query = emailJobs.all()
             email_job_query.order('-unsubscribed')
             
             for part in email_job_query:
-                trigger_id = str(part.trigger_id)
+                recipient_id = str(part.recipient_id)
                 unsubscribed = part.unsubscribed
                 if unsubscribed == 1:
-                    gae_list.append(trigger_id)
+                    gae_list.append(recipient_id)
             
             qualtrics_list = [] #List of unsubscribed participants from Qualtrics panel
             
+            data = {}
             access_data = qualtricsCall(data)
     
             data['Request'] = 'getPanel'        
@@ -1569,12 +1181,11 @@ class getUnsub(webapp2.RequestHandler):
             data['Unsubscribed'] = '1'
         
             url = 'https://new.qualtrics.com/WRAPI/ControlPanel/api.php'
+            
             url_values = urllib.urlencode(data)
             full_url = url + '?' + url_values
-        
-            req = urllib2.Request(full_url)
+            
             try:
-                urllib2.urlopen(req)
                 thedata = urllib2.urlopen(full_url) #for parsing XML
                 
                 tree = objectify.parse(thedata)  #for parsing XML
@@ -1586,19 +1197,18 @@ class getUnsub(webapp2.RequestHandler):
         
                     for i in range(0, Recipients):
                         recipient = people[i]
-                        ED = recipient.EmbeddedData
-                        trigger_id = ED.TriggerResponseID.text            
+                        recipient_id = recipient.RecipientID.text       
                         unsub = recipient.Unsubscribed.text
                         if unsub == '1':
-                            qualtrics_list.append(trigger_id)
+                            qualtrics_list.append(recipient_id)
             
                     gae_list_len = len(gae_list)
                     qual_list_len = len(qualtrics_list)
             
                     if gae_list_len != qual_list_len:
-                        for i in range(0, qual_list_len):
+                        for i in range(qual_list_len):
                             if qualtrics_list[i] not in gae_list:
-                                deferred.defer(update_unsub, trigger_id)            
+                                deferred.defer(update_unsub, qualtrics_list[i])       
                     else:
                         pass
     
@@ -1608,19 +1218,20 @@ class getUnsub(webapp2.RequestHandler):
             except urllib2.HTTPError as e:
                 print e.code
                 print e.read()
+            
         else:
             pass
     
         
 def update_qualfuperiod(recipient_id, fup):
-    
+    data = {}
     access_data = qualtricsCall(data)
     
     data['Request'] = 'updateRecipient'
     data['User'] = str(access_data['User'])
     data['Token'] = str(access_data['Token'])
     data['RecipientID'] = recipient_id
-    data['LibraryID'] = str(access_data['LibraryID'])  # IWHRC library ID
+    data['LibraryID'] = str(access_data['LibraryID'])
     data['ED[FUPERIOD]'] = fup
     
     url = 'https://new.qualtrics.com/WRAPI/ControlPanel/api.php'
@@ -1636,9 +1247,9 @@ def update_qualfuperiod(recipient_id, fup):
         print e.read()
 
 
-def update_fuperiod(trigger_id, fup):
+def update_fuperiod(recipient_id, fup):
     """ Updates fuperiod in emailJobs table """
-    db.run_in_transaction(emailJobs.update_fu, trigger_id, fup)  
+    db.run_in_transaction(emailJobs.update_fu, recipient_id, fup)
 
 
 class updateFollowUp(webapp2.RequestHandler):
@@ -1668,11 +1279,9 @@ class updateFollowUp(webapp2.RequestHandler):
             
             email_job_query = emailJobs.all()
             email_job_query.filter('fu_period <', follow_up_num)  #Filter out people who have reached the last follow-up period to speed up queries (regex?)
-            #q.filter('fu_period <', 999) # Find a way to filter out people who have no fu_period
             email_job_query.filter('fu_period !=', None)
         
             for part in email_job_query:
-                trigger_id = str(part.trigger_id)
                 recipient_id = str(part.recipient_id)
                 consent = part.consent_date # This might have to be given a generic name
                 
@@ -1686,39 +1295,39 @@ class updateFollowUp(webapp2.RequestHandler):
                 
                 if schedule_query[0].interval is not None:
                     fup = days_since/interval # Number of days since consent date (this can be interval if it's a constant)
-                else:
-                    fup = fu_dict[days_since]
-                
+                else:                
+                    if days_since > fu_dict.keys()[-1]:
+                        fup = fu_dict[fu_dict.keys()[-1]] + 1   # Add one beyond final follow-up to indicated the follow-up is over 
+                    else:                
+                        for k in fu_dict.iterkeys():
+                            if k > days_since:
+                                break
+                            elif k == days_since:
+                                fup = fu_dict[days_since]
+                            else:
+                                fup = fu_dict[k]
+                                  
                 if fup != fu_period:
                     #update_qualfuperiod(recipient_id, fup) # updates follow-up period in Qualtrics panel
                     deferred.defer(update_qualfuperiod, recipient_id, fup) # updates follow-up period in Qualtrics panel (uses deferred)
-                    deferred.defer(update_fuperiod, trigger_id, fup)
+                    deferred.defer(update_fuperiod, recipient_id, fup)  # updates follow-up period in GAE datastore
                 else:
                     pass
         else:
             pass
 
-def store_datesent(trigger_id, follow_up, send_date_utc):
-    db.run_in_transaction(emailJobs.update_fusent, trigger_id, follow_up, send_date_utc)
+def store_datesent(recipient_id, follow_up, send_date_utc):
+    db.run_in_transaction(emailJobs.update_fusent, recipient_id, follow_up, send_date_utc)
 
 
-def send_fuemail(access_data, time_zone, message_ids_dict, recipient_id, follow_up, trigger_id):
+def send_fuemail(access_data, time_zone, message_ids_dict, recipient_id, follow_up):
     """  Sends follow-up emails """
     # Dictionary of follow-up message IDs
     message_id = message_ids_dict[follow_up]
     
     now = datetime.datetime.now()
     send_date_utc = timeStamp(now)
-    
-    if time_zone == 'Eastern':
-        zone = datetime.datetime.now(tz=ustimezone.Eastern) # get current Eastern datetime
-    elif time_zone == 'Central':
-        zone = datetime.datetime.now(tz=ustimezone.Central) # get current Central datetime
-    elif time_zone == 'Mountain':
-        zone = datetime.datetime.now(tz=ustimezone.Mountain) # get current Mountain datetime
-    else:
-        zone = datetime.datetime.now(tz=ustimezone.Pacific) # get current Pacific datetime
-        
+    zone = datetime.datetime.now(tz=ustimezone.Mountain) # send out from Mountain time zone (Qualtrics is in Utah)
     send_date = str(datetime.datetime(zone.year, zone.month, zone.day, zone.hour, zone.minute, zone.second))
     
     settings_data = settingData()
@@ -1729,12 +1338,12 @@ def send_fuemail(access_data, time_zone, message_ids_dict, recipient_id, follow_
     survey_id = str(message_data[0])
     subject_txt = str(message_data[1])
     
+    data = {}
     access_data = qualtricsCall(data)
     
     data['Request'] = 'sendSurveyToIndividual'
     data['User'] = str(access_data['User'])
     data['Token'] = str(access_data['Token'])
-    
     data['SurveyID'] = survey_id
     data['SendDate'] = send_date
     data['FromEmail'] = from_email
@@ -1745,7 +1354,7 @@ def send_fuemail(access_data, time_zone, message_ids_dict, recipient_id, follow_
     data['PanelID'] = str(access_data['PanelID'])
     data['PanelLibraryID'] = str(access_data['LibraryID'])
     data['RecipientID'] = recipient_id
-        
+    
     url = 'https://new.qualtrics.com/WRAPI/ControlPanel/api.php'
     url_values = urllib.urlencode(data)
     full_url = url + '?' + url_values
@@ -1754,21 +1363,25 @@ def send_fuemail(access_data, time_zone, message_ids_dict, recipient_id, follow_
     
     try:
         urllib2.urlopen(req)
-        store_datesent(trigger_id, follow_up, send_date_utc)
+        store_datesent(recipient_id, follow_up, send_date_utc)
+        status = 1
+        return status
     except urllib2.HTTPError as e:
+        status = 0
         print e.code
         print e.read()
-        
+        return status
+    
         
 class sendFollowUp(webapp2.RequestHandler):
     """ Queries Datastore for follow-up dates that match today's date, then adds them to a task queue """
     
     def get(self):
         if is_study_active() == 1:
-            
             now = datetime.datetime.now() # get current UTC datetime
             now_date = now.date() #today's date to compare with follow-up dates
             
+            data = {}
             access_data = qualtricsCall(data)
             
             email_job_query = emailJobs.all()
@@ -1801,8 +1414,7 @@ class sendFollowUp(webapp2.RequestHandler):
     
                         if part.fu_period == int(i) and fu_check == None:
                             recipient_id = str(part.recipient_id)
-                            #recipient_lang = str(part.recipient_lang)  # not used
-                            trigger_id = str(part.trigger_id)
+                            #recipient_lang = str(part.recipient_lang)  # TODO: Optional, not used
                             
                             follow_up_date = 'fu' + i
                             fu_raw_date = getattr(part, follow_up_date)
@@ -1810,7 +1422,7 @@ class sendFollowUp(webapp2.RequestHandler):
                             fu_date = fu_raw_date.date()
                             if fu_date == now_date:
                                 follow_up = int(i)
-                                deferred.defer(send_fuemail, access_data, time_zone, message_ids_dict, recipient_id, follow_up, trigger_id)
+                                deferred.defer(send_fuemail, access_data, time_zone, message_ids_dict, recipient_id, follow_up)
                             else:
                                 pass
         else:
@@ -1826,26 +1438,20 @@ class sendMissedFU(webapp2.RequestHandler):
             now = datetime.datetime.now() # get current UTC datetime
             now_date = now.date() #today's date to compare with follow-up dates
             
+            data = {}
             access_data = qualtricsCall(data)
     
             schedule_query = emailSchedule.all()
             follow_up_num = schedule_query[0].follow_up_num
             time_zone = schedule_query[0].time_zone
             
-            interval = 0
-            
             message_query = messageIDs.all()
             message_query.order('fu_period')
             
             fu_dict = {}
-            
-            if schedule_query[0].interval is not None:
-                interval = schedule_query[0].interval
-            else:
-    
-                for i in range(0, follow_up_num):
-                    fu_dict[int(message_query[i].days_since)] = int(message_query[i].fu_period)
-                    
+                
+            for i in range(follow_up_num):
+                fu_dict[int(message_query[i].days_since)] = int(message_query[i].fu_period)
             
             message_ids_dict = {}
             for i in range(0, follow_up_num):
@@ -1856,51 +1462,37 @@ class sendMissedFU(webapp2.RequestHandler):
                 message_ids_dict[fu_period] = message_id
             
             email_job_query = emailJobs.all()
-            email_job_query.filter('fu_period <', follow_up_num + 1)  #Filter out people who have reached the last follow-up period to speed up queries (regex?)
+            email_job_query.filter('fu_period <', follow_up_num + 1)  #Filter out people who have reached the last follow-up period to speed up queries
             #q.filter('fu_period <', 999) # Find a way to filter out people who have no fu_period
             email_job_query.filter('fu_period !=', None)
-            ##q.filter('consent_date !=', None )
     
             for part in email_job_query:
-                
-                trigger_id = part.trigger_id
                 #recipient_lang = part.recipient_lang
                 recipient_id = part.recipient_id
                 fu_period = int(part.fu_period)
-                
                 unsubscribed = part.unsubscribed
-                
                 consent = part.consent_date
+                
                 consent_date = consent.date()
                 calcdTime = now_date - consent_date
                 days_since = calcdTime.days
                 
-                fup = 0
+                sorted(fu_dict, key=fu_dict.get) # sort fu dictionary by keys (days after consent)
                 
-                if schedule_query[0].interval is not None:
-                    fup = days_since/interval # Number of days since consent date (this can be interval if it's a constant)
-                else:
-                    fup = fu_dict[days_since]
-                
-                if fup != fu_period:
-                    deferred.defer(update_qualfuperiod, recipient_id, fup) # updates follow-up period in Qualtrics panel (uses deferred)
-                    deferred.defer(update_fuperiod, trigger_id, fup)
-                else:
-                    pass
-                            
-                for i in range(1, fup + 1):
-                    i = str(i)
-                    followup = 'fu' + i + '_email_sent'
-        
-                    fu_check = getattr(part,followup)  # part.fu1_email_sent
-                    
-                    if fu_check == None and unsubscribed == 0:
-                        follow_up = int(i)
-                        deferred.defer(send_fuemail, access_data, time_zone, message_ids_dict, recipient_id, follow_up, trigger_id)
+                for k in fu_dict.iterkeys():
+                    if k > days_since:
+                        break
                     else:
-                        pass
+                        follow_up = fu_dict[k]
+                        followup = 'fu' + str(follow_up) + '_email_sent'
+                        fu_check = getattr(part, followup)  # part.fu1_email_sent
+                        
+                        if fu_check == None and unsubscribed == 0: # if the follow-up for this period hasn't been sent and the person isn't unsub                           
+                            deferred.defer(send_fuemail, access_data, time_zone, message_ids_dict, recipient_id, follow_up)
+                    
         else:
             pass
+
 
 class fuCheckUp(webapp2.RequestHandler):
     """ Creates a csv file for download to test whether all follow-ups are being sent when scheduled """
@@ -1924,7 +1516,7 @@ class fuCheckUp(webapp2.RequestHandler):
         email_job_query = emailJobs.all()
         email_job_query.order('consent_date')
         
-        header_tuple = ('last_modified', 'trigger_id', 'recipient_id', 'test_data', 'unsubscribe', 'start_date_local', 'consent_date', 'fu_period', 'last_fu_sent')
+        header_tuple = ('last_modified', 'trigger_id', 'recipient_id', 'test_data', 'unsubscribe', 'unsubscribe_date', 'start_date_local', 'consent_date', 'fu_period', 'last_fu_sent')
         data_tuples = ()
         variable_list = []
         
@@ -1943,11 +1535,13 @@ class fuCheckUp(webapp2.RequestHandler):
         data = [final_data_tuple]
         
         for part in email_job_query:
-            last_modified = str(part.last_modified)
+            last_modified_dt = part.last_modified
+            last_modified = last_modified_dt.strftime(tformatl)
             trigger_id = str(part.trigger_id)
             recipient_id = str(part.recipient_id)
-            test_data = str(part.test_data)
+            test_data = int(part.test_data)
             unsubscribed = str(part.unsubscribed)
+            unsubscribe_date = str(part.unsubscribe_date)
             start_date_local = str(part.start_date_local)
             consent_date = str(part.consent_date)
             fu_period = str(part.fu_period)
@@ -1961,7 +1555,7 @@ class fuCheckUp(webapp2.RequestHandler):
             
             var_tuple = tuple(var_list)
             
-            fixed_tuple = (last_modified, trigger_id, recipient_id, test_data, unsubscribed, start_date_local, consent_date, fu_period, last_fu_sent)
+            fixed_tuple = (last_modified, trigger_id, recipient_id, test_data, unsubscribed, unsubscribe_date, start_date_local, consent_date, fu_period, last_fu_sent)
             csv_tuple = fixed_tuple + var_tuple
             
             data.append((csv_tuple))
@@ -1974,6 +1568,85 @@ class fuCheckUp(webapp2.RequestHandler):
             writer.writerow(item)
 
 
+class sendEmail(webapp2.RequestHandler):
+    """ Page with form to send participants an email with a follow-up survey link """
+    
+    def get(self):
+        if users.get_current_user():
+            template_values = get_templ_vals()
+            url = users.create_logout_url(self.request.uri)
+            template_values['url'] = url
+            template_values['admin'] = 0
+            
+            if users.is_current_user_admin():
+                ejs = emailJobs.all()
+                template_values['download'] = ejs_exist()                  
+                template_values['admin'] = 1
+                template_values['urla'] = '_ah/admin/'
+                template_values['url_admin'] = 'GAE'
+                
+                message_ids_query = messageIDs.all()
+                message_ids_query.order('fu_period')
+                fu_len = message_ids_query.count()
+                
+                message_ids_dict = {}
+                
+                for i in range(fu_len):
+                    fu_period = int(message_ids_query[i].fu_period)
+                    message_id = str(message_ids_query[i].message_id)
+                    message_ids_dict[fu_period] = message_id              
+                
+                template_values['message_ids_dict'] = json.dumps(message_ids_dict) 
+                template_values['message_ids'] = message_ids_dict
+                template_values['messages_len'] = fu_len
+        else:
+            template_values = get_templ_vals()
+            url = users.create_login_url(self.request.uri)
+            template_values['url'] = url
+            template_values['url_linktext'] = 'Login'
+
+        template = jinja_environment.get_template('sendemail.html')
+        self.response.out.write(template.render(template_values))
+
+    def post(self):
+        template_values = get_templ_vals()
+        url = users.create_logout_url(self.request.uri)
+        template_values['url'] = url
+        template_values['admin'] = 1
+        template_values['urla'] = '_ah/admin/'
+        template_values['url_admin'] = 'GAE'
+        
+        data = {}
+        access_data = qualtricsCall(data)
+        
+        schedule_query = emailSchedule.all()
+        time_zone = schedule_query[0].time_zone
+        
+        message_ids_query = messageIDs.all()
+        message_ids_query.order('fu_period')
+        fu_len = message_ids_query.count()
+        
+        message_ids_dict = {}
+        
+        recipient_id = self.request.get('guid') # will be used to update the fu sent date in the datastore
+        follow_up = int(self.request.get('follow_up'))
+        lang = self.request.get('lang') # TODO: This will be optional
+        
+        for i in range(fu_len):
+            fu_period = int(message_ids_query[i].fu_period)
+            message_id = str(message_ids_query[i].message_id)
+             
+            message_ids_dict[fu_period] = message_id
+        
+        template_values['messages_len'] = fu_len
+        
+        status = send_fuemail(access_data, time_zone, message_ids_dict, recipient_id, follow_up) # TODO: status of trying to send email (1 = success, 0 = error), this is passed along to template
+        
+        template_values['status'] = status # status added to template_value dictionary to be used by conditional display of result message
+         
+        template = jinja_environment.get_template('sendemail.html')
+        self.response.out.write(template.render(template_values))
+        
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
                                
@@ -2000,5 +1673,6 @@ app = webapp2.WSGIApplication([
                                ('/editmessageids', editMessageIDs),
                                ('/deletemessageids', deleteMessageIDs),
                                
+                               ('/sendemail', sendEmail),
                                ],
-                               debug=True)       
+                               debug=True)

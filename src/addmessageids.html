@@ -1,95 +1,133 @@
-<!DOCTYPE html>
-<head>
-<title>Qualtrics Email | Messages</title>
-<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
-<link rel="shortcut icon" href="/static/images/favicon.ico" />
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Follow-ups{% endblock title %}
+{% block head %}{% endblock head %}
+{% block nav %}
 	{% if admin == 1 %}
-		<a href="{{ url_access }}">{{ url_access_text }}</a> |
-		<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
-		<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
-		<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+		<li><a href="{{ url_access }}" title="{{ url_access_text }}">{{ url_access_text }}</a></li>
+		<li><a href="{{ url_schedule }}" title="{{ url_schedule_text }}">{{ url_schedule_text }}</a></li>					
+		<li><a href="{{ url_settings }}" title="{{ url_settings_text }}">{{ url_settings_text }}</a></li>
+		<li class="active"><a href="{{ url_followups }}" title="{{ url_followups_text }}">{{ url_followups_text }}</a></li>
+		<li><a href="{{ url_sendemail }}" title="{{ url_sendemail_text }}">{{ url_sendemail_text }}</a></li>
+		{% if download == 1 %}
+			<li><a href="{{ url_download }}" title="{{ url_download_text }}">{{ url_download_text }}</a></li>
+		{% endif %}
+		<li><a href="{{ urla }}" title="{{ url_admin }}" target="_blank">{{ url_admin }}</a></li>
 	{% endif %}
-	<a href="{{ url }}">{{ url_linktext }}</a><br>
-	<h1>Qualtrics Email</h1>
-	<h2>Admin UI - Add messages</h2>
-
-  <table cellpadding="5">
-  {% if follow_up_val == 1 %}
-	<tr>
-		<td colspan="5" class="errors">You have more follow-up messages than the number you indicated in the settings.</td>			    
-	</tr>
-	<tr>
-		<td colspan="5" class="errors">To avoid any errors or unexpected behavior, please make sure the numbers match.</td>			  
-	</tr>
-{% endif %}
-  
-  {% if messages.count() > 0 %}
-    <tr>
-    	  <th>Message id</th>
-    	  <th>Subject text</th>
-    	  <th>Survey id</th>
-      <th>Follow-up period</th>
-      <th>Days since</th>
-    <tr> 
-    		{% for message in messages %}
-      
-    <tr>
-    	  <td><a href="/editmessageids?id={{message.message_id}}">{{ message.message_id }}</a></td>
-    	  <td> {{ message.subject_txt }} </td>
-    	  <td> {{ message.survey_id }} </td>
-      <td> {{ message.fu_period }} </td>
-      <td> {{ message.days_since }} </td>
-    </tr>
-    {% endfor %}
-    {% else %}
-    <tr>
-      <td colspan="6">No messages exist</td>
-    </tr>
-    {% endif %}
-    
-  </table>
-<br>
-<hr>
-<form action="/addmessageids" method="post">
-  <table >
-    <thead>
-      <tr>
-        <th>Message id</th>
-        <th>Subject text</th>
-        <th>Survey id</th>
-        <th>Follow-up</th>
-        <th>Days since</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><input type="text" size="25" name="message_id"  placeholder="MS_xxxxxxxxxxxxxxx"></td>
-        
-        {% if subject_txt != None %}
-        		<td><input type="text" size="50" name="subject_txt" value="{{ subject_txt }}"></td>
-        	{% else %}
-        		<td><input type="text" size="50" name="subject_txt" ></td>
-        {% endif %}
-        
-        {% if survey_id != None %}
-        		<td><input type="text" size="25" name="survey_id"  value="{{ survey_id }}" ></td>
-        	{% else %}
-        		<td><input type="text" size="25" name="survey_id" placeholder="SV_xxxxxxxxxxxxxxx"></td>
-        {% endif %}
-        
-        <td><input type="number"  name="fu_period" ></td>
-        <td><input type="number"  name="days_since" ></td>
-      </tr>
-    </tbody>
-  </table>
-  <br />
-  <div>
-    <input type="submit" value="Add">
-  </div>
-</form>
-
-</body>
-</html>
+	<li><a href="{{ url }}" title="{{ url_linktext }}">{{ url_linktext }}</a></li>
+{% endblock nav %}
+{% block container %}
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">
+			{% block pageheaders %}
+				<h1 class="page-header">Admin</h1>
+				<h3 class="sub-header">Follow-ups</h3>
+			{% endblock pageheaders %}
+			{% block alerts %}
+				{% if follow_up_val == 1 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>You have more follow-up messages than the number you indicated in the settings.</strong> To avoid any errors or unexpected behavior, please make sure the numbers match.
+					</div>
+				{% elif messages.count() < 1 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>No follow-up information exists.</strong>
+					</div>
+				{% endif %}	
+			{% endblock alerts %}			
+			{% if messages.count() > 0 %}
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Message ID</th>
+	    	  				<th>Subject text</th>
+	    	  				<th>Survey ID</th>
+							<th>Follow-up period</th>
+							<th>Days since</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for message in messages %}
+							<tr>
+								<td><a href="/editmessageids?id={{ message.message_id }}"> {{ message.message_id }}</a></td>
+								<td>{{ message.subject_txt }}</td>
+								<td>{{ message.survey_id }}</td>
+								<td>{{ message.fu_period }}</td>
+								<td>{{ message.days_since }}</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			{% endif %}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">	
+   			<div class="panel panel-success">
+	   			<div class="panel-heading">Add follow-up</div>
+	   			<div class="panel-body">
+					<form class="form-horizontal" action="/addmessageids" method="post">
+						<div class="form-group">
+							<label for="id_message_id" class="col-sm-2 control-label">
+								Message ID: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_message_id" name="message_id" placeholder="MS_xxxxxxxxxxxxxxx">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_subject_txt" class="col-sm-2 control-label">
+								Subject text: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Subject that will be displayed in the email"></span>
+							</label>
+							<div class="col-sm-10">
+								{% if subject_txt != None %}
+									<input type="text" class="form-control" id="id_subject_txt" name="subject_txt" value="{{ subject_txt }}">
+								{% else %}
+									<input type="text" class="form-control" id="id_subject_txt" name="subject_txt">
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_survey_id" class="col-sm-2 control-label">
+								Survey ID: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								{% if survey_id != None %}
+									<input type="text" class="form-control" id="id_survey_id" name="survey_id" value="{{ survey_id }}">
+								{% else %}
+									<input type="text" class="form-control" id="id_survey_id" name="survey_id" placeholder="SV_xxxxxxxxxxxxxxx">
+								{% endif %}
+							</div>
+						</div>		
+						<div class="form-group">
+							<label for="id_fu_period" class="col-sm-2 control-label">
+								Follow-up: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of the follow-up that corresponds with this message. This number must be sequential"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="1" class="form-control" id="id_fu_period" name="fu_period">
+							</div>
+						</div>	
+						<div class="form-group">
+							<label for="id_days_since" class="col-sm-2 control-label">
+								Days since/interval: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of days between this follow-up and consent. Leave this blank if you filled out the interval in the schedule page"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="0" class="form-control" id="id_days_since" name="days_since">
+							</div>
+						</div>																	
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="submit" class="btn btn-success">Add</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>					
+		</div>
+	</div>
+{% endblock container %}

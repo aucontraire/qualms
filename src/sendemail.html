@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Send email{% endblock title %}
+{% block head %}
+	<script>			
+		$(document).ready(function() {
+			var obj1 = JSON.parse( '{{ message_ids_dict }}' );
+			console.log(obj1);
+			var obj2 = jQuery.parseJSON('{{ message_ids_dict }}');
+			console.log(obj2);
+		});							
+	</script>
+{% endblock head %}
+{% block nav %}
+	{% if admin == 1 %}
+		<li><a href="{{ url_access }}" title="{{ url_access_text }}">{{ url_access_text }}</a></li>
+		<li><a href="{{ url_schedule }}" title="{{ url_schedule_text }}">{{ url_schedule_text }}</a></li>					
+		<li><a href="{{ url_settings }}" title="{{ url_settings_text }}">{{ url_settings_text }}</a></li>
+		<li><a href="{{ url_followups }}" title="{{ url_followups_text }}">{{ url_followups_text }}</a></li>
+		<li class="active"><a href="{{ url_sendemail }}" title="{{ url_sendemail_text }}">{{ url_sendemail_text }}</a></li>
+		{% if download == 1 %}
+			<li><a href="{{ url_download }}" title="{{ url_download_text }}">{{ url_download_text }}</a></li>
+		{% endif %}
+		<li><a href="{{ urla }}" title="{{ url_admin }}" target="_blank">{{ url_admin }}</a></li>
+	{% endif %}
+	<li><a href="{{ url }}" title="{{ url_linktext }}">{{ url_linktext }}</a></li>
+{% endblock nav %}
+{% block container %}
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">
+			{% block pageheaders %}	
+				<h1 class="page-header">Admin</h1>
+				<h3 class="sub-header">Send email</h3>
+			{% endblock pageheaders %}
+			{% block alerts %}
+				{% if messages_len < 1 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>No follow-up information exists.</strong> Please enter follow-up data in the "Follow-ups" page to use this feature
+					</div>				
+				{% endif %}
+				{% if status == 1 %}
+					<div class="alert alert-success alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>Email sent!</strong> 
+					</div>
+				{% elif status == 0 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>There was an error sending email.</strong> Check the fields and try again.
+					</div>
+				{% endif %}
+			{% endblock alerts %}
+			{% if messages_len > 0 %}
+	   			<div class="panel panel-success">
+		   			<div class="panel-heading">Send follow-up email</div>
+		   			<div class="panel-body">
+						<form class="form-horizontal" action="/sendemail" method="post">
+							<div class="form-group">
+								<label for="id_guid" class="col-sm-2 control-label">
+									RecipientID: 
+									<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Qualtrics ID of email recipient"></span>
+								</label>
+								<div class="col-sm-10">
+									<input type="text" class="form-control" id="id_guid" name="guid" placeholder="MLRP_xxxxxxxxxxxxxxx">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="id_follow_up" class="col-sm-2 control-label">
+									Follow-up Number: 
+									<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="The follow-up number to be sent"></span>
+								</label>
+								<div class="col-sm-10">												
+									<select class="form-control" id="id_follow_up" name="follow_up">
+										{% for opt in message_ids %}
+											<option value="{{ opt }}">{{ opt }}</option>
+										{% endfor %}
+									</select>											
+								</div>
+							</div>		
+							<div class="form-group">
+								<label for="id_lang" class="col-sm-2 control-label">
+									Language: 
+									<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Language of email to be sent. This will determine the language of subject"></span>
+								</label>
+								<div class="col-sm-10">
+									<select class="form-control" id="id_lang" name="lang">
+										<option value="AR">Arabic</option>
+										<option value="ZH-S">Chinese</option>
+										<option value="EN">English</option>
+										<option value="FR">French</option>
+										<option value="ES">Spanish</option>
+										<option value="RU">Russian</option>
+									</select>
+								</div>
+							</div>																			
+							<div class="form-group">
+								<div class="col-sm-offset-2 col-sm-10">
+									<button type="submit" class="btn btn-success">Send email</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			{% endif %}	
+		</div>
+	</div>
+{% endblock container %}	

@@ -1,79 +1,143 @@
-<!DOCTYPE html>
-	<head>
-		<title>Qualtrics Email | Edit schedule</title>
-		<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
-		<link rel="shortcut icon" href="/static/images/favicon.ico" />
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-		<script>
-		$( document ).ready(function() {
-		var text_choice = '{{ time_zone }}';
-		$("select option").filter(function() {
-		    //may want to use $.trim in here
-		    return $(this).text() == text_choice; 
-		}).prop('selected', true);
+{% extends "base.html" %}
+{% block title %}Edit schedule{% endblock title %}
+{% block head %}
+	<script>
+		$(document).ready(function() {
+			$("#delete").submit(function(event) {
+				if (confirm("Are you sure you want to delete this information?")) {
+					return true;
+				}
+				event.preventDefault();
+			});
+
+			var text_choice = '{{ time_zone }}';
+			$("select option").filter(function() {
+			    return $(this).text() == text_choice; 
+			}).prop('selected', true);
 		});
-		</script>
-	</head>
-	<body>
-		{% if admin == 1 %}
-				<a href="{{ url_access }}">{{ url_access_text }}</a> |
-				<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
-				<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
-				<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+	</script>
+{% endblock head %}
+{% block nav %}
+	{% if admin == 1 %}
+		<li><a href="{{ url_access }}" title="{{ url_access_text }}">{{ url_access_text }}</a></li>
+		<li class="active"><a href="{{ url_schedule }}" title="{{ url_schedule_text }}">{{ url_schedule_text }}</a></li>					
+		<li><a href="{{ url_settings }}" title="{{ url_settings_text }}">{{ url_settings_text }}</a></li>
+		<li><a href="{{ url_followups }}" title="{{ url_followups_text }}">{{ url_followups_text }}</a></li>
+		<li><a href="{{ url_sendemail }}" title="{{ url_sendemail_text }}">{{ url_sendemail_text }}</a></li>
+		{% if download == 1 %}
+			<li><a href="{{ url_download }}" title="{{ url_download_text }}">{{ url_download_text }}</a></li>
 		{% endif %}
-		<a href="{{ url }}">{{ url_linktext }}</a><br>
-		<h1>Qualtrics Email</h1>
-		<h2>Admin UI - Edit schedule</h2>
-		<form action="/deleteschedule" method="POST">
-			<input type="hidden" value="{{ key_id }}" name="id">
-			<table>
-				<tr>
-					<td>&nbsp;</td>
-					<td><input type="submit" value="Delete"/></td>
-				</tr>
-			</table>
-		</form>
-		<form action="/editschedule" method="POST">
-			<input type="hidden" value="{{ key_id }}" name="id">
-			<table>
-				<tr>
-					<td><strong>Date created</strong>:</td><td>{{ date_created }}</td>
-				</tr>
-				<tr>
-					<td><strong>Last modified</strong>:</td><td>{{ last_modified }}</td>
-				</tr>
-				<tr>
-					<td><strong>Last modified by</strong>:</td><td>{{ last_modified_by }}</td>
-				</tr>
-				<tr>
-					<td><strong>Time zone</strong>:</td>
-					<td>
-					 	<select name="time_zone" value="{{ time_zone }}">
-  							<option value="Eastern">Eastern</option>
-  							<option value="Central">Central</option>
-  							<option value="Mountain">Mountain</option>
-  							<option value="Pacific">Pacific</option>
-						</select>
-					</td>
-				</tr>
-				
-				<tr>
-					<td><strong>Start date</strong>:</td><td><input type="text" name="start_date" size="50" value="{{ start_date }}"/></td>
-				</tr>
-				
-				<tr>
-					<td><strong>Stop date</strong>:</td><td><input type="text" name="stop_date" size="50" value="{{ stop_date }}"/></td>
-				</tr>
-				<tr>
-					<td><strong>Number of follow-ups</strong>:</td><td><input type="number" name="follow_up_num" size="50" value="{{ follow_up_num }}"/></td>
-				</tr>
-				<tr>
-					<td><strong>Days between follow-ups</strong>:</td><td><input type="number" name="interval" size="50" value="{{ interval }}"/></td>
-				</tr>
-				<tr>
-					<td><input type="submit" value="Save edit"/></td><td>&nbsp;</td>					
-				</tr>
-			</table>
-		</form>
-	</body>
-</html>
+		<li><a href="{{ urla }}" title="{{ url_admin }}" target="_blank">{{ url_admin }}</a></li>
+	{% endif %}
+	<li><a href="{{ url }}" title="{{ url_linktext }}">{{ url_linktext }}</a></li>
+{% endblock nav %}
+{% block container %}
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">
+			{% block pageheaders %}	
+				<h1 class="page-header">Admin</h1>
+				<h3 class="sub-header">Edit schedule</h3>
+			{% endblock pageheaders %}
+			<form action="/deleteschedule" method="POST" id="delete">
+				<input type="hidden" value="{{ key_id }}" name="id">
+				<input type="submit" class="btn btn-danger" value="Delete"/>
+			</form>					
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">	
+   			<div class="panel panel-success">
+	   			<div class="panel-heading">Edit schedule</div>
+	   			<div class="panel-body">
+	   				<ul class="list-group">
+						<li class="list-group-item disabled">Date created: {{ date_created }}</li>
+						<li class="list-group-item disabled">Last modified: {{ last_modified }}</li>
+						<li class="list-group-item disabled">Last modified by: {{ last_modified_by }}</li>
+					</ul>
+					<form class="form-horizontal" action="/editschedule" method="POST">
+						<input type="hidden" value="{{ key_id }}" name="id">
+						<div class="form-group">
+							<label for="id_time_zone" class="col-sm-2 control-label">
+								Timezone: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Project time zone"></span>
+							</label>
+							<div class="col-sm-10">
+								<select class="form-control" id="id_time_zone" name="time_zone">
+									<option name="time_zone" value="Eastern">Eastern</option>
+					  				<option name="time_zone" value="Central">Central</option>
+					  				<option name="time_zone" value="Mountain">Mountain</option>
+					  				<option name="time_zone" value="Pacific">Pacific</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_start_date" class="col-sm-2 control-label">
+								Start datetime: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="When the project starts"></span>
+							</label>
+							<div class="col-sm-10">
+								<div class='input-group date' id='datetimepicker1'>
+									<input type='text' class="form-control" id="id_start_date" name="start_date" value="{{ start_date }}"/>
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_stop_date" class="col-sm-2 control-label">
+								Stop datetime: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="When the project ends"></span>
+							</label>
+							<div class="col-sm-10">										
+								<div class='input-group date' id='datetimepicker2'>
+									<input type='text' class="form-control" id="id_stop_date" name="stop_date" value="{{ stop_date }}"/>
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+								<script type="text/javascript">
+								    $(function () {										    	
+								        $('#datetimepicker1').datetimepicker();
+								        $('#datetimepicker2').datetimepicker({
+								            useCurrent: false //Important! See issue #1075
+								        });
+								        $("#datetimepicker1").on("dp.change", function (e) {
+								            $('#datetimepicker2').data("DateTimePicker").minDate(e.date);
+								        });
+								        $("#datetimepicker2").on("dp.change", function (e) {
+								            $('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
+								        });
+								    });
+								</script>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_follow_up_num" class="col-sm-2 control-label">
+								Number of follow-ups: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of follow-ups recipients are to receive"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="1" class="form-control" id="id_follow_up_num" name="follow_up_num" value="{{ follow_up_num }}">
+							</div>
+						</div>		
+						<div class="form-group">
+							<label for="id_interval" class="col-sm-2 control-label">
+								Days between follow-ups: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of days that are between each follow-up. Only fill this out if the days are constant"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="0" max="365" class="form-control" id="id_interval" name="interval" value="{{ interval }}">
+							</div>
+						</div>										
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="submit" class="btn btn-success">Save edit</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>				
+		</div>
+	</div>
+{% endblock container %}

@@ -5,7 +5,6 @@ api_version: 1
 threadsafe: true
 
 handlers:
-
 - url: /cron/getpanelworker
   script: main.app
   login: admin
@@ -26,11 +25,15 @@ handlers:
   script: main.app
   login: admin
 
+- url: /static/js
+  static_dir: static/js
 
 - url: /static/css
   static_dir: static/css
 - url: /static/images
   static_dir: static/images
+- url: /static/fonts
+  static_dir: static/fonts
 
 - url: /.*
   script: main.app

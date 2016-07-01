@@ -1,103 +1,170 @@
-<!DOCTYPE html>
-<head>
-<title>Qualtrics Email | Schedule</title>
-<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
-<link rel="shortcut icon" href="/static/images/favicon.ico" />
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Schedule{% endblock title %}
+{% block head %}{% endblock head %}
+{% block nav %}
 	{% if admin == 1 %}
-		<a href="{{ url_access }}">{{ url_access_text }}</a> |
-		<a href="{{ url_schedule }}">{{ url_schedule_text }}</a> |
-		<a href="{{ url_settings }}">{{ url_settings_text }}</a> |
-		<a href="{{ url_followups }}">{{ url_followups_text }}</a> |
+		<li><a href="{{ url_access }}" title="{{ url_access_text }}">{{ url_access_text }}</a></li>
+		<li class="active"><a href="{{ url_schedule }}" title="{{ url_schedule_text }}">{{ url_schedule_text }}</a></li>					
+		<li><a href="{{ url_settings }}" title="{{ url_settings_text }}">{{ url_settings_text }}</a></li>
+		<li><a href="{{ url_followups }}" title="{{ url_followups_text }}">{{ url_followups_text }}</a></li>
+		<li><a href="{{ url_sendemail }}" title="{{ url_sendemail_text }}">{{ url_sendemail_text }}</a></li>
+		{% if download == 1 %}
+			<li><a href="{{ url_download }}" title="{{ url_download_text }}">{{ url_download_text }}</a></li>
+		{% endif %}
+		<li><a href="{{ urla }}" title="{{ url_admin }}" target="_blank">{{ url_admin }}</a></li>
 	{% endif %}
-	<a href="{{ url }}">{{ url_linktext }}</a><br>
-	<h1>Qualtrics Email</h1>
-	<h2>Admin UI - Add email schedule</h2>
-
-  <table cellpadding="5">
-  {% if schedule_query.count() > 1 %}
-				<tr>
-			      <td colspan="5" class="errors">You have more than one set of schedule information.</td>			    
-			    </tr>
-			    <tr>
-			    <td colspan="5" class="errors">To avoid any errors or unexpected behavior, use only one. </td>			  
-			    </tr>
+	<li><a href="{{ url }}" title="{{ url_linktext }}">{{ url_linktext }}</a></li>
+{% endblock nav %}
+{% block container %}
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">
+			{% block pageheaders %}
+				<h1 class="page-header">Admin</h1>
+				<h3 class="sub-header">Schedule</h3>
+			{% endblock pageheaders %}
+			{% block alerts %}
+				{% if schedule_query.count() > 1 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>You have more than one set of schedule information.</strong> To avoid any errors or unexpected behavior, use only one.
+					</div>
+				{% elif schedule_query.count() < 1 %}
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<strong>No schedule information exists.</strong>
+					</div>							
+				{% endif %}
+			{% endblock alerts %}
+			{% if schedule_query.count() > 0 %}
+				<table class="table">
+					<thead>				
+					    <tr>
+							<th>Key id</th>
+							<th>Time zone</th>
+							<th>Start date</th>
+							<th>Stop date</th>
+							<th>Follow-ups</th>
+							<th>Interval days</th>
+					    </tr>
+				    </thead>
+				    <tbody>
+				    {% for schedule in schedule_query %} 
+				    							    
+					    <tr>
+							<td><a href="/editschedule?id={{ schedule.key().id() }}">{{ schedule.key().id() }}</a></td>
+							<td> {{ schedule.time_zone }} </td>
+							<td id="start_date_td"> {{ schedule.start_date }} </td>
+							<td id="stop_date_td"> {{ schedule.stop_date }} </td>
+							<td> {{ schedule.follow_up_num }} </td>
+							<td> {{ schedule.interval }} </td>
+					    </tr>
+						<script>
+							var start_date = '{{ schedule.start_date }}';
+							var stop_date = '{{ schedule.stop_date }}';
+							var start_dt = moment(start_date).format('MM/DD/YYYY h:mm A');
+							var stop_dt = moment(stop_date).format('MM/DD/YYYY h:mm A');
+							$("#start_date_td").html(start_dt);
+							$("#stop_date_td").html(stop_dt);
+							alert(datetime);
+						</script>							    
+				    {% endfor %}
+				    </tbody>				    
+				</table>
 			{% endif %}
-
-  {% if schedule_query.count() > 0 %}
-    <tr>
-    	  <th>Key id</th>
-    	  <th>Time zone</th>
-      <th>Start date</th>
-      <th>Stop date</th>
-      <th>Follow-ups</th>
-      <th>Interval days</th>
-    <tr>
-    {% for schedule in schedule_query %}
-      
-    <tr>
-    	  <td><a href="/editschedule?id={{ schedule.key().id() }}">{{ schedule.key().id() }}</a></td>
-    	  <td> {{ schedule.time_zone }} </td>
-      <td> {{ schedule.start_date }} </td>
-      <td> {{ schedule.stop_date }} </td>
-      <td> {{ schedule.follow_up_num }} </td>
-      <td> {{ schedule.interval }} </td>
-    </tr>
-    {% endfor %}
-    {% else %}
-    <tr>
-      <td colspan="5">No schedule information exists</td>
-    </tr>
-    {% endif %}
-    
-  </table>
-  
-<br>
-<hr>
-<form action="/addschedule" method="post">
-  <table>
-    <tbody>
-    <tr>
-        <td> <strong>Time zone:</strong></td>
-        <td>
-        		<select name="time_zone">
-  				<option name="time_zone" value="Eastern">Eastern</option>
-  				<option name="time_zone" value="Central">Central</option>
-  				<option name="time_zone" value="Mountain">Mountain</option>
-  				<option name="time_zone" value="Pacific">Pacific</option>
-			</select>
-        </td>    
-      </tr>
-      <tr>
-        <td> <strong>Start datetime:</strong></td>
-        <td><input type="text" size="30" name="start_date" placeholder="2013-02-08 16:39:00"></td>    
-      </tr>
-      <tr>
-        <td> <strong>Stop datetime:</strong></td>
-        <td><input type="text" size="30" name="stop_date" placeholder="2013-02-11 16:39:00"></td>        
-      </tr>
-      <tr>
-        <td> <strong>Number of follow-ups:</strong></td>
-        <td><input type="number" size="50" name="follow_up_num"  min="0" max="365"></td>        
-      </tr>
-      <tr>
-        <td> <strong>Days between follow-ups:</strong></td>
-        <td><input type="number" size="50" name="interval" min="0" max="365"></td>
-      </tr>
-    </tbody>
-  </table>
-  <br />
-  <div>
-    <input type="submit" value="Add">
-  </div>
-</form>
-
-
-
-
-
-
-</body>
-</html>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12 col-md-12 main">	
+   			<div class="panel panel-success">
+	   			<div class="panel-heading">Add schedule</div>
+	   			<div class="panel-body">
+					<form class="form-horizontal" action="/addschedule" method="post">
+						<div class="form-group">
+							<label for="id_time_zone" class="col-sm-2 control-label">
+								Timezone: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Project time zone"></span>
+							</label>
+							<div class="col-sm-10">
+								<select class="form-control" id="id_time_zone" name="time_zone">
+									<option name="time_zone" value="Eastern">Eastern</option>
+					  				<option name="time_zone" value="Central">Central</option>
+					  				<option name="time_zone" value="Mountain">Mountain</option>
+					  				<option name="time_zone" value="Pacific">Pacific</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_start_date" class="col-sm-2 control-label">
+								Start datetime: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="When the project starts"></span>
+							</label>
+							<div class="col-sm-10">
+								<!-- <input type="text" class="form-control" id="id_start_date" name="start_date"> -->
+								<div class='input-group date' id='datetimepicker1'>
+									<input type='text' class="form-control" id="id_start_date" name="start_date" />
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+								<!-- start_date=11%2F04%2F2015+12%3A00+AM -->
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_stop_date" class="col-sm-2 control-label">
+								Stop datetime: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="When the project ends"></span>
+							</label>
+							<div class="col-sm-10">
+								<!-- <input type="text" class="form-control" id="id_stop_date" name="stop_date"> -->
+								<div class='input-group date' id='datetimepicker2'>
+									<input type='text' class="form-control" id="id_stop_date" name="stop_date" />
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+								<script type="text/javascript">
+								    $(function () {
+								        $('#datetimepicker1').datetimepicker();
+								        $('#datetimepicker2').datetimepicker({
+								            useCurrent: false //Important! See issue #1075
+								        });
+								        $("#datetimepicker1").on("dp.change", function (e) {
+								            $('#datetimepicker2').data("DateTimePicker").minDate(e.date);
+								        });
+								        $("#datetimepicker2").on("dp.change", function (e) {
+								            $('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
+								        });
+								    });
+								</script>
+								<!-- stop_date=10%2F06%2F2015+12%3A00+AM -->
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_follow_up_num" class="col-sm-2 control-label">
+								Number of follow-ups: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of follow-ups recipients are to receive"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="1" class="form-control" id="id_follow_up_num" name="follow_up_num">
+							</div>
+						</div>		
+						<div class="form-group">
+							<label for="id_interval" class="col-sm-2 control-label">
+								Days between follow-ups: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of days that are between each follow-up. Only fill this out if the days are constant"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="0" max="365" class="form-control" id="id_interval" name="interval">
+							</div>
+						</div>										
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="submit" class="btn btn-success">Add</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock container %}
