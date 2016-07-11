@@ -42,8 +42,11 @@
 							<th>Message ID</th>
 	    	  				<th>Subject text</th>
 	    	  				<th>Survey ID</th>
-							<th>Follow-up period</th>
+							<th>Follow-up</th>
 							<th>Days since</th>
+							<th>Reminders</th>
+							<th>Reminder days</th>
+							<th>Reminder ID</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -54,6 +57,9 @@
 								<td>{{ message.survey_id }}</td>
 								<td>{{ message.fu_period }}</td>
 								<td>{{ message.days_since }}</td>
+								<td>{{ message.reminder_number }}</td>
+								<td>{{ message.reminder_days }}</td>
+								<td>{{ message.reminder_message_id }}</td>
 							</tr>
 						{% endfor %}
 					</tbody>
@@ -119,7 +125,35 @@
 							<div class="col-sm-10">
 								<input type="number" min="0" class="form-control" id="id_days_since" name="days_since">
 							</div>
-						</div>																	
+						</div>
+						<hr>
+						<div class="form-group">
+							<label for="id_reminder_number" class="col-sm-2 control-label">
+								Number of reminders: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of reminders for this follow-up"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="0" class="form-control" id="id_reminder_number" name="reminder_number" value="0">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_reminder_days" class="col-sm-2 control-label">
+								Reminder days (frequency): 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of days between each reminder"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="0" class="form-control" id="id_reminder_days" name="reminder_days">
+							</div>
+						</div>											
+						<div class="form-group">
+							<label for="id_reminder_message_id" class="col-sm-2 control-label">
+								Reminder Message ID: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="ID for reminder message(s). Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_reminder_message_id" name="reminder_message_id" placeholder="MS_xxxxxxxxxxxxxxx">
+							</div>
+						</div>																							
 						<div class="form-group">
 							<div class="col-sm-offset-2 col-sm-10">
 								<button type="submit" class="btn btn-success">Add</button>

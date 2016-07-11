@@ -77,7 +77,7 @@
 								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of the follow-up that corresponds with this message. This number must be sequential"></span>
 							</label>
 							<div class="col-sm-10">
-								<input type="number" min="1" class="form-control" id="id_fu_period" name="fu_period" value="{{ fu_period }}"å>
+								<input type="number" min="1" class="form-control" id="id_fu_period" name="fu_period" value="{{ fu_period }}">
 							</div>
 						</div>	
 						<div class="form-group">
@@ -86,9 +86,37 @@
 								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of days between this follow-up and consent. Leave this blank if you filled out the interval in the schedule page"></span>
 							</label>
 							<div class="col-sm-10">
-								<input type="number" min="0" class="form-control" id="id_days_since" name="days_since" value="{{ days_since }}"å>
+								<input type="number" min="0" class="form-control" id="id_days_since" name="days_since" value="{{ days_since }}">
 							</div>
-						</div>																									
+						</div>
+						<hr>
+						<div class="form-group">
+							<label for="id_reminder_number" class="col-sm-2 control-label">
+								Number of reminders: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of reminders for this follow-up"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="0" class="form-control" id="id_reminder_number" name="reminder_number" value="{{ reminder_number }}">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="id_reminder_days" class="col-sm-2 control-label">
+								Reminder days (frequency): 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Number of days between each reminder"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="number" min="0" class="form-control" id="id_reminder_days" name="reminder_days" value="{{ reminder_days }}">
+							</div>
+						</div>											
+						<div class="form-group">
+							<label for="id_reminder_message_id" class="col-sm-2 control-label">
+								Reminder Message ID: 
+								<span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="ID for reminder message(s). Found in the Qualtrics IDs tab under Account Settings"></span>
+							</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="id_reminder_message_id" name="reminder_message_id" placeholder="MS_xxxxxxxxxxxxxxx" value="{{ reminder_message_id }}">
+							</div>
+						</div>																																
 						<div class="form-group">
 							<div class="col-sm-offset-2 col-sm-10">
 								<button type="submit" class="btn btn-success">Save edit</button>

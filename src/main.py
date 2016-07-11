@@ -194,6 +194,10 @@ class messageIDs(db.Model):
     survey_id = db.StringProperty() # SurveyID
     subject_txt = db.StringProperty() # Subject
     days_since = db.IntegerProperty()
+    
+    reminder_number = db.IntegerProperty(default=0)
+    reminder_days = db.IntegerProperty()
+    reminder_message_id = db.StringProperty()
 
     
 def messageIDByKeyName(message_id):
@@ -898,6 +902,14 @@ class addMessageIDs(webapp2.RequestHandler):
         else:
             message_ids.days_since = int(self.request.get('days_since'))      
         
+        reminder_number = int(self.request.get('reminder_number'))
+        reminder_days = int(self.request.get('reminder_days'))
+        reminder_message_id = self.request.get('reminder_message_id')
+        if reminder_number > 0 and reminder_days > 0:
+            message_ids.reminder_number = reminder_number
+            message_ids.reminder_days = reminder_days 
+            message_ids.reminder_message_id = reminder_message_id
+            
         message_ids.put()
         
         template = jinja_environment.get_template('addmessageids.html')
@@ -920,6 +932,10 @@ class editMessageIDs(webapp2.RequestHandler):
         fu_period = newpost.fu_period
         message_id = newpost.key().name()
         
+        reminder_number = newpost.reminder_number
+        reminder_days = newpost.reminder_days
+        reminder_message_id = newpost.reminder_message_id
+        
         if users.get_current_user():
             template_values = get_templ_vals()
             url = users.create_logout_url(self.request.uri)
@@ -939,7 +955,11 @@ class editMessageIDs(webapp2.RequestHandler):
                 template_values['last_modified_by'] = last_modified_by
                 template_values['survey_id'] = survey_id
                 template_values['days_since'] = days_since
-                template_values['fu_period'] = fu_period      
+                template_values['fu_period'] = fu_period
+                template_values['reminder_number'] = reminder_number
+                template_values['reminder_days'] = reminder_days
+                template_values['reminder_message_id'] = reminder_message_id
+                
         else:
             template_values = get_templ_vals()
             url = users.create_login_url(self.request.uri)
@@ -955,6 +975,9 @@ class editMessageIDs(webapp2.RequestHandler):
         survey_id = self.request.get('survey_id')
         fu_period = int(self.request.get('fu_period'))
         days_since = int(self.request.get('days_since'))
+        reminder_number = int(self.request.get('reminder_number'))
+        reminder_days = int(self.request.get('reminder_days'))
+        reminder_message_id = self.request.get('reminder_message_id')
         
         newpost = messageIDByKeyName(message_id)
         
@@ -962,6 +985,10 @@ class editMessageIDs(webapp2.RequestHandler):
         newpost.survey_id = survey_id
         newpost.fu_period = fu_period
         newpost.days_since = days_since
+        newpost.reminder_number = reminder_number
+        newpost.reminder_days = reminder_days
+        newpost.reminder_message_id = reminder_message_id
+        
         newpost.put()
         self.redirect('/addmessageids')
 
